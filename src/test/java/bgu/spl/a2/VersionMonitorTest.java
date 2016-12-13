@@ -43,16 +43,17 @@ public class VersionMonitorTest {
     @Test
     public void awaitTest() throws Exception {
         testy = new VersionMonitor();
-        final int[] num = {testy.getVersion()};
+        final int num = testy.getVersion();
         final boolean[] result = {false};
         Thread t1 = new Thread(() -> {
-            try{
-            testy.await(num[0] +1);
-            result[0] = true;
-            }
-            catch(InterruptedException e){
+            try {
+                testy.await(num);
+                result[0] = true;
+            } catch (InterruptedException e) {
                 result[0] = false;
-            }});
+            }
+        });
+        t1.start();
         try {
             Thread.sleep(2000);
             assertFalse(result[0]);
@@ -60,8 +61,7 @@ public class VersionMonitorTest {
             Thread.sleep(2000);
             assertTrue(result[0]);
 
-        }
-        catch (InterruptedException e){
+        } catch (InterruptedException e) {
             assertTrue(false);
         }
     }

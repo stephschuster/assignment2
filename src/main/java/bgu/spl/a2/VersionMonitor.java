@@ -30,7 +30,7 @@ public class VersionMonitor {
     // TODO check if this is the correct solution, maybe we are locking the thread?
     public void await(int version) throws InterruptedException {
         while(version == versionNum) {
-            this.wait();
+            Thread.sleep(2000);
         }
     }
 }
