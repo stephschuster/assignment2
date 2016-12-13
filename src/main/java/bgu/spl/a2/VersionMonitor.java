@@ -18,19 +18,19 @@ package bgu.spl.a2;
  */
 public class VersionMonitor {
     private int versionNum = 0;
+
     public int getVersion() {
         return versionNum;
     }
 
-    public void inc() {
-        synchronized(this) {
-            versionNum++;
-        }
+    public synchronized void inc() {
+        versionNum++;
     }
 
+    // TODO check if this is the correct solution, maybe we are locking the thread?
     public void await(int version) throws InterruptedException {
-        if(version == versionNum) {
-            wait();
+        while(version == versionNum) {
+            this.wait();
         }
     }
 }
