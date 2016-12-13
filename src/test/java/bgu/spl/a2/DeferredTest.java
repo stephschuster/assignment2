@@ -1,10 +1,7 @@
 package bgu.spl.a2;
 
-import bgu.spl.a2.Deferred;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.LinkedList;
 
 import static org.junit.Assert.*;
 /**
@@ -19,7 +16,7 @@ public class DeferredTest {
     // ask me later if you want more explanation
     @Before
     public void setup() {
-        deferred = new Deferred<Integer>();
+        deferred = new Deferred<>();
     }
 
     /*
