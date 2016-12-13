@@ -17,6 +17,7 @@ import java.util.LinkedList;
 public class WorkStealingThreadPool {
         protected Pair<Processor, LinkedList<Task>>[] pairs;
         private int howManyProcessors;
+        private Thread[] arrayThread;
     /**
      * creates a {@link WorkStealingThreadPool} which has nthreads
      * {@link Processor}s. Note, threads should not get started until calling to
@@ -32,9 +33,12 @@ public class WorkStealingThreadPool {
     public WorkStealingThreadPool(int nthreads) {
         howManyProcessors = nthreads;
         pairs = new Pair[howManyProcessors];
+        arrayThread = new Thread[howManyProcessors];
         for(int i=0; i<howManyProcessors; i++) {
             pairs[i] = new Pair<>(new Processor(i, this), new LinkedList<Task>());
+            arrayThread[i] = new Thread(pairs[i].fst);
         }
+
     }
 
     /**
@@ -61,7 +65,7 @@ public class WorkStealingThreadPool {
      */
     public void shutdown() throws InterruptedException {
         for(int i=0; i<howManyProcessors; i++) {
-
+            arrayThread[i].join();
         }
     }
 
@@ -70,7 +74,7 @@ public class WorkStealingThreadPool {
      */
     public void start() {
         for(int i=0; i<howManyProcessors; i++) {
-            pairs[i].fst.run();
+            arrayThread[i].start();
         }
     }
 

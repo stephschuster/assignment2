@@ -66,7 +66,6 @@ public class Deferred<T> {
             myT = value;
             isResolved = true;
             //we can change this to an iterator if you want
-            //maybe need to add sync here, not sure
             while(!callBackList.isEmpty()) {
                 Runnable callback = callBackList.remove(0);
                 callback.run();

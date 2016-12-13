@@ -39,8 +39,7 @@ public class Processor implements Runnable {
 
     @Override
     public void run() {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
+
     }
 
 }
