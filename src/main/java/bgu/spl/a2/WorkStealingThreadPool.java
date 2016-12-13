@@ -1,5 +1,9 @@
 package bgu.spl.a2;
 
+import com.sun.tools.javac.util.Pair;
+
+import java.util.LinkedList;
+
 /**
  * represents a work stealing thread pool - to understand what this class does
  * please refer to your assignment.
@@ -11,7 +15,8 @@ package bgu.spl.a2;
  * methods
  */
 public class WorkStealingThreadPool {
-
+        protected Pair<Processor, LinkedList<Task>>[] pairs;
+        private int howManyProcessors;
     /**
      * creates a {@link WorkStealingThreadPool} which has nthreads
      * {@link Processor}s. Note, threads should not get started until calling to
@@ -25,8 +30,11 @@ public class WorkStealingThreadPool {
      * thread pool
      */
     public WorkStealingThreadPool(int nthreads) {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
+        howManyProcessors = nthreads;
+        pairs = new Pair[howManyProcessors];
+        for(int i=0; i<howManyProcessors; i++) {
+            pairs[i] = new Pair<>(new Processor(i, this), new LinkedList<Task>());
+        }
     }
 
     /**
@@ -35,8 +43,8 @@ public class WorkStealingThreadPool {
      * @param task the task to execute
      */
     public void submit(Task<?> task) {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
+        int rand = (int)(Math.random()*howManyProcessors);
+        pairs[rand].snd.add(task);
     }
 
     /**
@@ -52,16 +60,18 @@ public class WorkStealingThreadPool {
      * shutdown the queue is itself a processor of this queue
      */
     public void shutdown() throws InterruptedException {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
+        for(int i=0; i<howManyProcessors; i++) {
+
+        }
     }
 
     /**
      * start the threads belongs to this thread pool
      */
     public void start() {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
+        for(int i=0; i<howManyProcessors; i++) {
+            pairs[i].fst.run();
+        }
     }
 
 }
