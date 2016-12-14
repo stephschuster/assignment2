@@ -15,9 +15,11 @@ import java.util.LinkedList;
  * methods
  */
 public class WorkStealingThreadPool {
+        //we need to change the linked list to ConcurrentLinkedDeque. it should work much better with threads
         protected Pair<Processor, LinkedList<Task>>[] pairs;
         private int howManyProcessors;
         private Thread[] arrayThread;
+        private VersionMonitor myMonitor;
     /**
      * creates a {@link WorkStealingThreadPool} which has nthreads
      * {@link Processor}s. Note, threads should not get started until calling to
@@ -34,6 +36,7 @@ public class WorkStealingThreadPool {
         howManyProcessors = nthreads;
         pairs = new Pair[howManyProcessors];
         arrayThread = new Thread[howManyProcessors];
+        myMonitor = new VersionMonitor();
         for(int i=0; i<howManyProcessors; i++) {
             pairs[i] = new Pair<>(new Processor(i, this), new LinkedList<Task>());
             arrayThread[i] = new Thread(pairs[i].fst);
@@ -49,6 +52,7 @@ public class WorkStealingThreadPool {
     public void submit(Task<?> task) {
         int rand = (int)(Math.random()*howManyProcessors);
         pairs[rand].snd.add(task);
+        myMonitor.inc();
     }
 
     /**

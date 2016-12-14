@@ -1,5 +1,7 @@
 package bgu.spl.a2;
 
+import java.util.LinkedList;
+
 /**
  * this class represents a single work stealing processor, it is
  * {@link Runnable} so it is suitable to be executed by threads.
@@ -39,7 +41,45 @@ public class Processor implements Runnable {
 
     @Override
     public void run() {
-
+        //if there is a task - do the task
+        if(! this.pool.pairs[id].snd.isEmpty()) {
+            this.pool.pairs[id].snd.peekFirst().start();
+        } else if( steal()) {   //else if no tasks in linked list - steal()
+                               //not sure if to do anything in here
+        } else {              //else - sleep (until version update)
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+            }
+        }
     }
+
+
+    //loop through the processors starting from the one next to me.
+    //find the first one you can steal from.
+    //steal half of his tasks.
+    private boolean steal() {
+        LinkedList<Task> temp = new LinkedList<>();
+        boolean stealing = false;
+        for(int i = id+1; i<pool.pairs.length+id+1 && !stealing; i++) {
+            if(pool.pairs[i%pool.pairs.length].fst.canStealFromMe()) {
+                for(int j =0; j<pool.pairs[i%pool.pairs.length].snd.size()/2; j++) {
+                    this.pool.pairs[id].snd.add(pool.pairs[i % pool.pairs.length].snd.getLast());
+                    stealing = true;
+                }
+            }
+        }
+
+        return stealing;
+    }
+
+    /*package*/ boolean canStealFromMe() {
+        if(pool.pairs[this.id].snd.size() <= 1) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
 
 }
