@@ -88,6 +88,10 @@ public class Processor implements Runnable {
         return stealing;
     }
 
+    /*package*/ void addNewTask(Task task){
+        this.pool.pairs[id].snd.add(task);
+    }
+
     /*package*/ boolean canStealFromMe() {
         if(pool.pairs[this.id].snd.size() <= 1) {
             return false;
