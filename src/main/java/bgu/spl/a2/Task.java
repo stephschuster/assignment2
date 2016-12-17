@@ -14,6 +14,8 @@ import java.util.Collection;
  * @param <R> the task result type
  */
 public abstract class Task<R> {
+    Processor currentProcessor;
+    VersionMonitor whenResolveCounter;
 
     /**
      * start handling the task - note that this method is protected, a handler
@@ -38,8 +40,15 @@ public abstract class Task<R> {
      * @param handler the handler that wants to handle the task
      */
     /*package*/ final void handle(Processor handler) {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
+        // save the handler on this
+        this.currentProcessor = handler;
+        // check if the task is ready to run
+             // separate the task
+            // add them to handler
+            // wait for the tasks to finish
+
+        // run start when ready
+        this.start();
     }
 
     /**
@@ -49,8 +58,9 @@ public abstract class Task<R> {
      * @param task the task to execute
      */
     protected final void spawn(Task<?>... task) {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
+        for (Task current: task){
+            // add to this.currentProcessor
+        }
     }
 
     /**
@@ -64,8 +74,19 @@ public abstract class Task<R> {
      * @param callback the callback to execute once all the results are resolved
      */
     protected final void whenResolved(Collection<? extends Task<?>> tasks, Runnable callback) {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
+        this.whenResolveCounter = new VersionMonitor();
+        for(Task curr: tasks){
+            curr.getResult().whenResolved(() -> {
+                    this.whenResolveCounter.inc();
+                    canRunCallback(tasks.size(), callback);
+            });
+        }
+    }
+
+    private synchronized void canRunCallback(int total, Runnable callback){
+        int version = this.whenResolveCounter.getVersion();
+        if(total == version)
+            callback.run();
     }
 
     /**
