@@ -86,8 +86,10 @@ public abstract class Task<R> {
 
     private synchronized void canRunCallback(int total, Runnable callback){
         int version = this.whenResolveCounter.getVersion();
-        if(total == version)
+        if(total == version) {
             callback.run();
+            // re-add the task to handler
+        }
     }
 
     /**
