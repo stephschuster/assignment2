@@ -69,6 +69,7 @@ public class WorkStealingThreadPool {
      */
     public void shutdown() throws InterruptedException {
         for(int i=0; i<howManyProcessors; i++) {
+            pairs[i].fst.setShutdown();
             arrayThread[i].join();
         }
     }
