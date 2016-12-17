@@ -16,6 +16,7 @@ import java.util.Collection;
 public abstract class Task<R> {
     Processor currentProcessor;
     VersionMonitor whenResolveCounter;
+    Deferred<R> deferred = new Deferred();
 
     /**
      * start handling the task - note that this method is protected, a handler
@@ -96,16 +97,15 @@ public abstract class Task<R> {
      * @param result - the task calculated result
      */
     protected final void complete(R result) {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
+        // do whe need to add something else here?
+        this.deferred.resolve(result);
     }
 
     /**
      * @return this task deferred result
      */
     public final Deferred<R> getResult() {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
+        return this.deferred;
     }
 
 }
