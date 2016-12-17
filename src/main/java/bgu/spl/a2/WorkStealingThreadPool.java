@@ -19,7 +19,7 @@ public class WorkStealingThreadPool {
         protected Pair<Processor, LinkedList<Task>>[] pairs;
         private int howManyProcessors;
         private Thread[] arrayThread;
-        private VersionMonitor myMonitor;
+        VersionMonitor monitor;
     /**
      * creates a {@link WorkStealingThreadPool} which has nthreads
      * {@link Processor}s. Note, threads should not get started until calling to
@@ -36,7 +36,7 @@ public class WorkStealingThreadPool {
         howManyProcessors = nthreads;
         pairs = new Pair[howManyProcessors];
         arrayThread = new Thread[howManyProcessors];
-        myMonitor = new VersionMonitor();
+        monitor = new VersionMonitor();
         for(int i=0; i<howManyProcessors; i++) {
             pairs[i] = new Pair<>(new Processor(i, this), new LinkedList<Task>());
             arrayThread[i] = new Thread(pairs[i].fst);
@@ -52,7 +52,6 @@ public class WorkStealingThreadPool {
     public void submit(Task<?> task) {
         int rand = (int)(Math.random()*howManyProcessors);
         pairs[rand].fst.addNewTask(task);
-        myMonitor.inc();
     }
 
     /**

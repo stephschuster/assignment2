@@ -18,7 +18,6 @@ public class Processor implements Runnable {
     private final WorkStealingThreadPool pool;
     private final int id;
     private boolean isShutDown;
-    private VersionMonitor monitor;
 
     /**
      * constructor for this class
@@ -39,7 +38,6 @@ public class Processor implements Runnable {
     /*package*/ Processor(int id, WorkStealingThreadPool pool) {
         this.id = id;
         this.pool = pool;
-        this.monitor = new VersionMonitor();
     }
 
     @Override
@@ -47,19 +45,25 @@ public class Processor implements Runnable {
         while(!this.isShutDown){
             //if there is a task - do the task
             if(!this.pool.pairs[id].snd.isEmpty()) {
-                this.pool.pairs[id].snd.peekFirst().handle(this);
+                System.out.println("ID: " + this.id + " handle task");
+                this.pool.pairs[id].snd.pollFirst().handle(this);
             }
             //else if no tasks in linked list - steal()
             else if( steal()) {
+                System.out.println("ID: " + this.id + " steal tasks");
                 //not sure if to do anything in here
             }
             //else - sleep (until version update)
             else {
                 try {
-                    this.wait();
+                    System.out.println("ID: " + this.id + " waiting");
+                    pool.monitor.await(pool.monitor.getVersion());
+                    System.out.println("ID: " + this.id + " stop waiting");
                 } catch (InterruptedException e) {
                 }
             }
+
+            System.out.println("ID: " + this.id + " have " + this.pool.pairs[id].snd.size() + " tasks enqueue");
         }
 
 
@@ -83,6 +87,7 @@ public class Processor implements Runnable {
         for(int i = id+1; i<pool.pairs.length+id+1 && !stealing; i++) {
             //find the first one you can steal from.
             if(pool.pairs[i%pool.pairs.length].fst.canStealFromMe()) {
+                System.out.println("stealing from " + i%pool.pairs.length + " to " + this.id);
                 //steal half of his tasks.
                 for(int j =0; j<pool.pairs[i%pool.pairs.length].snd.size()/2; j++) {
                     this.addNewTask(pool.pairs[i % pool.pairs.length].snd.getLast());
@@ -94,9 +99,10 @@ public class Processor implements Runnable {
         return stealing;
     }
 
-    /*package*/ synchronized void addNewTask(Task task){
+    /*package*/ void addNewTask(Task task){
         this.pool.pairs[id].snd.add(task);
-        this.notifyAll();
+        this.pool.monitor.inc();
+
     }
 
     /*package*/ void setShutdown(){
