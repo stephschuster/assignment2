@@ -7,7 +7,10 @@ package bgu.spl.a2.test;
 
 import bgu.spl.a2.Task;
 import bgu.spl.a2.WorkStealingThreadPool;
+
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
@@ -21,8 +24,22 @@ public class MergeSort extends Task<int[]> {
 
     @Override
     protected void start() {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
+        int sum=0;
+        List<Task<Integer>> tasks = new ArrayList<>();
+        int rows = array.length;
+        for(int i=0;i<rows;i++){
+            SumRow newTask=new SumRow(array,i);
+            spawn(newTask);
+            tasks.add(newTask);
+        }
+        whenResolved(tasks,()->{
+                    int[] res = new int[rows];
+                    for(int j=0; j< rows; j++){
+                        res[j] = tasks.get(j).getResult().get();
+                    }
+                    complete(res);
+                }
+        );
     }
 
     public static void main(String[] args) throws InterruptedException {
@@ -45,4 +62,20 @@ public class MergeSort extends Task<int[]> {
         pool.shutdown();
     }
 
+}
+
+class SumRow extends Task<Integer> {
+    private int[] array;
+    private int r;
+
+    SumRow(int[] array,int r) {
+        this.array = array;
+        this.r=r;
+    }
+    protected void start(){
+        int sum=0;
+        for(int j=0 ;j<array.length;j++)
+            sum+=array[j];
+        complete(sum);
+    }
 }

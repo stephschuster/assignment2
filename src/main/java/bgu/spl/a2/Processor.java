@@ -90,6 +90,7 @@ public class Processor implements Runnable {
 
     /*package*/ void addNewTask(Task task){
         this.pool.pairs[id].snd.add(task);
+        this.notifyAll();
     }
 
     /*package*/ boolean canStealFromMe() {
