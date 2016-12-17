@@ -18,19 +18,35 @@ package bgu.spl.a2;
  */
 public class VersionMonitor {
     private int versionNum = 0;
+    private boolean isWaiting;
+    private int goalVersion = 0; // will change in the future. first time there is no one waiting so doesnt matter
+
+    //in the forum they said we can add package protected constructor here
+    /*package*/ VersionMonitor() {
+                isWaiting = false; //first time no one is waiting
+    }
+
 
     public int getVersion() {
         return versionNum;
     }
 
     public synchronized void inc() {
-        versionNum++;
+            versionNum++;
+            if(isWaiting && getVersion() == goalVersion) {
+                isWaiting = false;
+                this.notifyAll();
+            }
     }
 
-    // TODO check if this is the correct solution, maybe we are locking the thread?
-    public void await(int version) throws InterruptedException {
+    public synchronized void await(int version) throws InterruptedException {
         while(version == versionNum) {
-            Thread.sleep(2000);
+            try {
+                goalVersion = getVersion() + 1;
+                isWaiting = true;
+                this.wait();
+            }
+            catch (InterruptedException e) {}
         }
     }
 }
