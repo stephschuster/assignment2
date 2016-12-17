@@ -51,7 +51,7 @@ public class WorkStealingThreadPool {
      */
     public void submit(Task<?> task) {
         int rand = (int)(Math.random()*howManyProcessors);
-        pairs[rand].snd.add(task);
+        pairs[rand].fst.addNewTask(task);
         myMonitor.inc();
     }
 
