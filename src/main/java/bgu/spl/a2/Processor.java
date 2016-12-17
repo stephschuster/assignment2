@@ -17,6 +17,8 @@ public class Processor implements Runnable {
 
     private final WorkStealingThreadPool pool;
     private final int id;
+    private boolean isShutDown;
+    private VersionMonitor monitor;
 
     /**
      * constructor for this class
@@ -37,26 +39,29 @@ public class Processor implements Runnable {
     /*package*/ Processor(int id, WorkStealingThreadPool pool) {
         this.id = id;
         this.pool = pool;
+        this.monitor = new VersionMonitor();
     }
 
     @Override
     public void run() {
-        //if there is a task - do the task
-        if(!this.pool.pairs[id].snd.isEmpty()) {
-            this.pool.pairs[id].snd.peekFirst().start();
-        }
-        //else if no tasks in linked list - steal()
-        else if( steal()) {
-            //not sure if to do anything in here
-        }
-        //else - sleep (until version update)
-        else {
-            try {
-                this.wait();
-                // ok Im waiting, for do what? whos gonna awake me?
-            } catch (InterruptedException e) {
+        while(!this.isShutDown){
+            //if there is a task - do the task
+            if(!this.pool.pairs[id].snd.isEmpty()) {
+                this.pool.pairs[id].snd.peekFirst().handle(this);
+            }
+            //else if no tasks in linked list - steal()
+            else if( steal()) {
+                //not sure if to do anything in here
+            }
+            //else - sleep (until version update)
+            else {
+                try {
+                    this.wait();
+                } catch (InterruptedException e) {
+                }
             }
         }
+
 
 
         // this will run once, pay attention... what happens after you finish the first task?
@@ -71,6 +76,7 @@ public class Processor implements Runnable {
 
 
     private boolean steal() {
+        System.out.println("steal!!!!");
         LinkedList<Task> temp = new LinkedList<>();
         boolean stealing = false;
         //loop through the processors starting from the one next to me.
@@ -79,7 +85,7 @@ public class Processor implements Runnable {
             if(pool.pairs[i%pool.pairs.length].fst.canStealFromMe()) {
                 //steal half of his tasks.
                 for(int j =0; j<pool.pairs[i%pool.pairs.length].snd.size()/2; j++) {
-                    this.pool.pairs[id].snd.add(pool.pairs[i % pool.pairs.length].snd.getLast());
+                    this.addNewTask(pool.pairs[i % pool.pairs.length].snd.getLast());
                     stealing = true;
                 }
             }
@@ -88,9 +94,13 @@ public class Processor implements Runnable {
         return stealing;
     }
 
-    /*package*/ void addNewTask(Task task){
+    /*package*/ synchronized void addNewTask(Task task){
         this.pool.pairs[id].snd.add(task);
         this.notifyAll();
+    }
+
+    /*package*/ void setShutdown(){
+        this.isShutDown = true;
     }
 
     /*package*/ boolean canStealFromMe() {

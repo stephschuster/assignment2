@@ -18,6 +18,7 @@ public abstract class Task<R> {
     VersionMonitor whenResolveCounter;
     Deferred<R> deferred = new Deferred();
     boolean readyToComplete;
+    boolean started;
     Runnable callback;
 
     /**
@@ -50,13 +51,14 @@ public abstract class Task<R> {
         // save the handler on this
         this.currentProcessor = handler;
 
-        if (this.readyToComplete && this.callback != null) {
+        if (this.readyToComplete && this.callback != null && this.started) {
             this.callback.run();
-        } else {
+        } else if(!this.started){
             // this will spawn, add callback, then, after all the tasks are finished
             // the callback will be called and the complete function will be called
             // thats the way we "re-add" the function to the process
             this.start();
+            this.started = true;
         }
     }
 
@@ -83,14 +85,17 @@ public abstract class Task<R> {
      * @param callback the callback to execute once all the results are resolved
      */
     protected final void whenResolved(Collection<? extends Task<?>> tasks, Runnable callback) {
+        System.out.println("whenResolved for task");
         this.whenResolveCounter = new VersionMonitor();
         this.callback = callback;
         for (Task curr : tasks) {
             curr.getResult().whenResolved(() -> {
+                System.out.println("whenResolved callback for task");
                 this.whenResolveCounter.inc();
                 // check if all the tasks are done
                 if (tasks.size() == this.whenResolveCounter.getVersion()) {
                     readyToComplete = true;
+                    System.out.println("whenResolved callback ready to complete task");
                     // re-add the task to processor
                     this.currentProcessor.addNewTask(this);
                 }

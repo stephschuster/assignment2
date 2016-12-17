@@ -24,6 +24,7 @@ public class MergeSort extends Task<int[]> {
 
     @Override
     protected void start() {
+        System.out.println("MergeSort started");
         int sum=0;
         List<Task<Integer>> tasks = new ArrayList<>();
         int rows = array.length;
@@ -33,6 +34,7 @@ public class MergeSort extends Task<int[]> {
             tasks.add(newTask);
         }
         whenResolved(tasks,()->{
+            System.out.println("this is the callback from when resolve");
                     int[] res = new int[rows];
                     for(int j=0; j< rows; j++){
                         res[j] = tasks.get(j).getResult().get();
@@ -73,6 +75,7 @@ class SumRow extends Task<Integer> {
         this.r=r;
     }
     protected void start(){
+        System.out.println("SumRow started");
         int sum=0;
         for(int j=0 ;j<array.length;j++)
             sum+=array[j];
