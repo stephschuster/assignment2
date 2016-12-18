@@ -2,7 +2,7 @@ package bgu.spl.a2;
 
 import com.sun.tools.javac.util.Pair;
 
-import java.util.LinkedList;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * represents a work stealing thread pool - to understand what this class does
@@ -16,10 +16,11 @@ import java.util.LinkedList;
  */
 public class WorkStealingThreadPool {
         //we need to change the linked list to ConcurrentLinkedDeque. it should work much better with threads
-        protected Pair<Processor, LinkedList<Task>>[] pairs;
+        protected Pair<Processor, ConcurrentLinkedDeque<Task>>[] pairs;
         private int howManyProcessors;
         private Thread[] arrayThread;
         VersionMonitor monitor;
+        boolean isShutdown;
     /**
      * creates a {@link WorkStealingThreadPool} which has nthreads
      * {@link Processor}s. Note, threads should not get started until calling to
@@ -38,7 +39,7 @@ public class WorkStealingThreadPool {
         arrayThread = new Thread[howManyProcessors];
         monitor = new VersionMonitor();
         for(int i=0; i<howManyProcessors; i++) {
-            pairs[i] = new Pair<>(new Processor(i, this), new LinkedList<Task>());
+            pairs[i] = new Pair<>(new Processor(i, this), new ConcurrentLinkedDeque<Task>());
             arrayThread[i] = new Thread(pairs[i].fst);
         }
 
@@ -51,6 +52,7 @@ public class WorkStealingThreadPool {
      */
     public void submit(Task<?> task) {
         int rand = (int)(Math.random()*howManyProcessors);
+        System.out.println("pool chose the processor number " + rand);
         pairs[rand].fst.addNewTask(task);
     }
 
@@ -67,8 +69,10 @@ public class WorkStealingThreadPool {
      * shutdown the queue is itself a processor of this queue
      */
     public void shutdown() throws InterruptedException {
+        this.isShutdown = true;
+        this.monitor.inc();
+
         for(int i=0; i<howManyProcessors; i++) {
-            pairs[i].fst.setShutdown();
             arrayThread[i].join();
         }
     }
