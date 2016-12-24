@@ -1,15 +1,14 @@
-package bgu.spl.a2.sim;
 
-import bgu.spl.a2.sim.tools.GcdScrewDriver;
-import bgu.spl.a2.sim.tools.NextPrimeHammer;
-import bgu.spl.a2.sim.tools.RandomSumPliers;
-import bgu.spl.a2.sim.tools.Tool;
-import bgu.spl.a2.sim.conf.ManufactoringPlan;
-import bgu.spl.a2.Deferred;
+		package bgu.spl.a2.sim;
 
-import java.awt.*;
-import java.util.LinkedList;
-import java.util.concurrent.ConcurrentLinkedDeque;
+		import bgu.spl.a2.sim.tools.Tool;
+		import bgu.spl.a2.sim.conf.ManufactoringPlan;
+		import bgu.spl.a2.Deferred;
+
+		import java.util.ArrayList;
+		import java.util.LinkedList;
+		import java.util.concurrent.ConcurrentHashMap;
+		import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * A class representing the warehouse in your simulation
@@ -21,21 +20,14 @@ import java.util.concurrent.ConcurrentLinkedDeque;
  *
  */
 public class Warehouse {
-	private ConcurrentLinkedDeque<GcdScrewDriver> screwList;
-	private ConcurrentLinkedDeque<NextPrimeHammer> hammerList;
-	private ConcurrentLinkedDeque<RandomSumPliers> pliersList;
-	private LinkedList<ManufactoringPlan> planList;
-
+	LinkedList<ManufactoringPlan> plans;
+	ConcurrentHashMap<String, ConcurrentLinkedQueue<Tool>> tools;
+	ConcurrentHashMap<String, ConcurrentLinkedQueue<Deferred<Tool>>> waitingList;
 
 	/**
 	 * Constructor
 	 */
-	public Warehouse(){
-		pliersList = new ConcurrentLinkedDeque<>();
-		hammerList = new ConcurrentLinkedDeque<>();
-		screwList = new ConcurrentLinkedDeque<>();
-		planList = new LinkedList<>();
-	}
+	public Warehouse(){}
 
 	/**
 	 * Tool acquisition procedure
@@ -43,19 +35,31 @@ public class Warehouse {
 	 * @param type - string describing the required tool
 	 * @return a deferred promise for the  requested tool
 	 */
-	public Deferred<Tool> acquireTool(String type) {
-
-		return null;
+	public Deferred<Tool> acquireTool(String type){
+		Deferred<Tool> promise = new Deferred<>();
+		if(this.tools.get(type).size() > 0){
+			Tool tool = this.tools.get(type).poll();
+			promise.resolve(tool);
+		} else {
+			ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(type);
+			list.add(promise);
+			waitingList.put(type, list);
+		}
+		return promise;
 	}
 
 	/**
 	 * Tool return procedure - releases a tool which becomes available in the warehouse upon completion.
 	 * @param tool - The tool to be returned
 	 */
-	public void releaseTool(Tool tool) {
-		//that's it?
-		//what does it mean "upon completion?"
-		addTool(tool, 1);
+	public void releaseTool(Tool tool){
+		ConcurrentLinkedQueue<Tool> temp = this.tools.get(tool.getType());
+		temp.add(tool);
+		this.tools.put(tool.getType(), temp);
+
+		ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(tool.getType());
+		if(list.size() > 0)
+			list.poll().resolve(tool);
 	}
 
 
@@ -64,9 +68,13 @@ public class Warehouse {
 	 * @param product - a string with the product name for which a ManufactoringPlan is desired
 	 * @return A ManufactoringPlan for product
 	 */
-	public ManufactoringPlan getPlan(String product) {
-		//do we need to check every product name or is there a more general way to do this?
-	return null;
+	public ManufactoringPlan getPlan(String product){
+		for (ManufactoringPlan plan: plans) {
+			if(plan.getProductName() == product)
+				return plan;
+		}
+
+		return null;
 	}
 
 	/**
@@ -74,8 +82,7 @@ public class Warehouse {
 	 * @param plan - a ManufactoringPlan to be stored
 	 */
 	public void addPlan(ManufactoringPlan plan){
-		//anything else here?
-		planList.add(plan);
+		this.plans.add(plan);
 	}
 
 	/**
@@ -84,23 +91,14 @@ public class Warehouse {
 	 * @param qty - amount of tools of type tool to be stored
 	 */
 	public void addTool(Tool tool, int qty){
+		for(int i = 0; i < qty; i++) {
+			ConcurrentLinkedQueue<Tool> temp = this.tools.get(tool.getType());
+			temp.add(tool);
+			this.tools.put(tool.getType(), temp);
 
-		//i wans't sure if we are making a warehouse for just these type of tools or any tool that they want.
-		//for now i did just for the tools that are in the json file
-		if(tool.getType().equalsIgnoreCase("rs-pliers")) {
-			for (int i = 0; i < qty; i++) {
-				pliersList.add(new RandomSumPliers());
-			}
-		} else if(tool.getType().equalsIgnoreCase("np-hammer")) {
-			for (int i = 0; i < qty; i++) {
-				hammerList.add(new NextPrimeHammer());
-			}
-		} else if(tool.getType().equalsIgnoreCase( "gs-driver")) {
-			for (int i = 0; i < qty; i++) {
-				screwList.add(new GcdScrewDriver());
-			}
+			ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(tool.getType());
+			if (list.size() > 0)
+				list.poll().resolve(tool);
 		}
-
 	}
-
 }

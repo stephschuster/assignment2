@@ -102,9 +102,8 @@ public class Simulator {
 
     //they gave us a main funccton that returns an int
     //why does this main function need to return an int?
-    public static int main(String[] args)  {
+    public static void main(String[] args)  {
             start();
-            return 0;
         }
 }
 
