@@ -6,7 +6,7 @@ import java.math.BigInteger;
 
 
 public class NextPrimeHammer implements Tool {
-    private String toolType = "Next prime";
+    private String toolType = "np-hammer";
     private long resultOfToolUse;
 
 
