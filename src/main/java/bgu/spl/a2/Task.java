@@ -1,6 +1,7 @@
 package bgu.spl.a2;
 
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * an abstract class that represents a task that may be executed using the
@@ -15,7 +16,7 @@ import java.util.Collection;
  */
 public abstract class Task<R> {
     Processor currentProcessor;
-    VersionMonitor whenResolveCounter;
+    AtomicInteger whenResolveCounter  = new AtomicInteger(0);
     Deferred<R> deferred = new Deferred();
     boolean readyToComplete;
     boolean started;
@@ -86,14 +87,14 @@ public abstract class Task<R> {
      */
     protected final void whenResolved(Collection<? extends Task<?>> tasks, Runnable callback) {
         System.out.println("whenResolved for task");
-        this.whenResolveCounter = new VersionMonitor();
+        this.whenResolveCounter = new AtomicInteger(0);
         this.callback = callback;
         for (Task curr : tasks) {
             curr.getResult().whenResolved(() -> {
                 System.out.println("whenResolved callback for task");
-                this.whenResolveCounter.inc();
+                int count = this.whenResolveCounter.addAndGet(1);
                 // check if all the tasks are done
-                if (tasks.size() == this.whenResolveCounter.getVersion()) {
+                if (tasks.size() == count) {
                     readyToComplete = true;
                     System.out.println("whenResolved callback ready to complete task");
                     // re-add the task to processor
@@ -120,5 +121,4 @@ public abstract class Task<R> {
     public final Deferred<R> getResult() {
         return this.deferred;
     }
-
 }
