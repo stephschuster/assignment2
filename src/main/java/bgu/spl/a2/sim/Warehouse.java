@@ -1,17 +1,18 @@
-package bgu.spl.a2.sim;
 
-import bgu.spl.a2.sim.tools.Tool;
-import bgu.spl.a2.sim.conf.ManufactoringPlan;
-import bgu.spl.a2.Deferred;
+		package bgu.spl.a2.sim;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+		import bgu.spl.a2.sim.tools.Tool;
+		import bgu.spl.a2.sim.conf.ManufactoringPlan;
+		import bgu.spl.a2.Deferred;
+
+		import java.util.ArrayList;
+		import java.util.LinkedList;
+		import java.util.concurrent.ConcurrentHashMap;
+		import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * A class representing the warehouse in your simulation
- * 
+ *
  * Note for implementors: you may add methods and synchronize any of the
  * existing methods in this class *BUT* you must be able to explain why the
  * synchronization is needed. In addition, the methods you add to this class can
@@ -29,12 +30,12 @@ public class Warehouse {
     public Warehouse(){}
 
 	/**
-	* Tool acquisition procedure
-	* Note that this procedure is non-blocking and should return immediatly
-	* @param type - string describing the required tool
-	* @return a deferred promise for the  requested tool
-	*/
-    public Deferred<Tool> acquireTool(String type){
+	 * Tool acquisition procedure
+	 * Note that this procedure is non-blocking and should return immediatly
+	 * @param type - string describing the required tool
+	 * @return a deferred promise for the  requested tool
+	 */
+	public Deferred<Tool> acquireTool(String type){
 		Deferred<Tool> promise = new Deferred<>();
 		if(this.tools.get(type).size() > 0){
 			Tool tool = this.tools.get(type).poll();
@@ -48,10 +49,10 @@ public class Warehouse {
 	}
 
 	/**
-	* Tool return procedure - releases a tool which becomes available in the warehouse upon completion.
-	* @param tool - The tool to be returned
-	*/
-    public void releaseTool(Tool tool){
+	 * Tool return procedure - releases a tool which becomes available in the warehouse upon completion.
+	 * @param tool - The tool to be returned
+	 */
+	public void releaseTool(Tool tool){
 		ConcurrentLinkedQueue<Tool> temp = this.tools.get(tool.getType());
 		temp.add(tool);
 		this.tools.put(tool.getType(), temp);
@@ -61,13 +62,13 @@ public class Warehouse {
 			list.poll().resolve(tool);
 	}
 
-	
+
 	/**
-	* Getter for ManufactoringPlans
-	* @param product - a string with the product name for which a ManufactoringPlan is desired
-	* @return A ManufactoringPlan for product
-	*/
-    public ManufactoringPlan getPlan(String product){
+	 * Getter for ManufactoringPlans
+	 * @param product - a string with the product name for which a ManufactoringPlan is desired
+	 * @return A ManufactoringPlan for product
+	 */
+	public ManufactoringPlan getPlan(String product){
 		for (ManufactoringPlan plan: plans) {
 			if(plan.getProductName() == product)
 				return plan;
@@ -75,21 +76,21 @@ public class Warehouse {
 
 		return null;
 	}
-	
+
 	/**
-	* Store a ManufactoringPlan in the warehouse for later retrieval
-	* @param plan - a ManufactoringPlan to be stored
-	*/
-    public void addPlan(ManufactoringPlan plan){
+	 * Store a ManufactoringPlan in the warehouse for later retrieval
+	 * @param plan - a ManufactoringPlan to be stored
+	 */
+	public void addPlan(ManufactoringPlan plan){
 		this.plans.add(plan);
 	}
-    
+
 	/**
-	* Store a qty Amount of tools of type tool in the warehouse for later retrieval
-	* @param tool - type of tool to be stored
-	* @param qty - amount of tools of type tool to be stored
-	*/
-    public void addTool(Tool tool, int qty){
+	 * Store a qty Amount of tools of type tool in the warehouse for later retrieval
+	 * @param tool - type of tool to be stored
+	 * @param qty - amount of tools of type tool to be stored
+	 */
+	public void addTool(Tool tool, int qty){
 		for(int i = 0; i < qty; i++) {
 			ConcurrentLinkedQueue<Tool> temp = this.tools.get(tool.getType());
 			temp.add(tool);
