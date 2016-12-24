@@ -6,7 +6,7 @@ import java.util.Random;
 
 
 public class RandomSumPliers implements Tool {
-    private String toolType = "Randomizer";
+    private String toolType = "rs-pliers";
     @Override
     public String getType() {
         return toolType;
