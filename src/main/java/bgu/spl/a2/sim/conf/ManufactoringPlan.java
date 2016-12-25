@@ -18,6 +18,8 @@ public class ManufactoringPlan {
 	*/
     public ManufactoringPlan(String product, String[] parts, String[] tools) {
     	this.productName = product;
+		this.arrayParts = new String[parts.length];
+		this.arrayTools = new String[tools.length];
     	//not sure if we need to deep copy or shallow, did deep for now
     	for(int i=0; i<parts.length; i++) {
     		arrayParts[i] = parts[i];

@@ -6,18 +6,16 @@
 package bgu.spl.a2.sim;
 
 import bgu.spl.a2.WorkStealingThreadPool;
+import bgu.spl.a2.sim.conf.ManufactoringPlan;
+import bgu.spl.a2.sim.tasks.WaveTask;
 import bgu.spl.a2.sim.tools.GcdScrewDriver;
 import bgu.spl.a2.sim.tools.NextPrimeHammer;
 import bgu.spl.a2.sim.tools.RandomSumPliers;
-import bgu.spl.a2.sim.tools.Tool;
 import com.google.gson.*;
-import com.google.gson.reflect.TypeToken;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -46,34 +44,8 @@ public class Simulator {
         Gson gson = gBuilder.create();
         parser = gson.fromJson(reader, ParseJson.class);
 
-//        System.out.println(" Number of Threads= "+parser.getThreads());
-//        System.out.println("**************Tools***************");
-//
-//        for (int i = 0; i < parser.getTools().size(); i++) {
-//            System.out.println("Tool Name : "+parser.getTools().get(i).getName() +" qty= "+ parser.getTools().get(i).getQty());
-//
-//        }
-//        System.out.println("**************Plans***************");
-//
-//        for (int i = 0; i < parser.getPlans().size(); i++) {
-//            System.out.println("Product : " + parser.getPlans().get(i).getProduct());
-//            for (int j = 0; j < parser.getPlans().get(i).getTools().length; j++) {
-//                System.out.println(" Tool number "+j+" for product "+parser.getPlans().get(i).getProduct()+ " is "+
-//                        parser.getPlans().get(i).getTools()[j]);
-//            }
-//            for (int j = 0; j < parser.getPlans().get(i).getParts().length; j++) {
-//                System.out.println(" Part number "+j+" for product "+parser.getPlans().get(i).getProduct()+ " is "+
-//                        parser.getPlans().get(i).getParts()[j]);
-//            }
-//        }
-//        System.out.println("**************Waves***************");
-//        for (int i = 0; i < parser.getWaves().size(); i++) {
-//            for (int j = 0; j < parser.getWaves().get(i).size(); j++) {
-//                System.out.println("Product Name : " + parser.getWaves().get(i).get(j).getProduct() +
-//                        " qty= " + parser.getWaves().get(i).get(j).getQty() +
-//                        " stardId: " + parser.getWaves().get(i).get(j).getStartId());
-//            }
-//        }
+
+        System.out.println("**************Tools***************");
 
         //create a new warehouse and add the tools to it
         warehouse = new Warehouse();
@@ -87,9 +59,40 @@ public class Simulator {
             }
         }
 
+        System.out.println("**************Plans***************");
 
+        for (int i = 0; i < parser.getPlans().size(); i++) {
+            ParsePlan parsePlan =  parser.getPlans().get(i);
+            ManufactoringPlan plan = new ManufactoringPlan(parsePlan.getProduct(), parsePlan.getParts(), parsePlan.getTools());
+            warehouse.addPlan(plan);
+        }
 
-            return null;
+        ConcurrentLinkedQueue<Product> result = new ConcurrentLinkedQueue<>();
+        System.out.println("**************Waves***************");
+        for (int i = 0; i < parser.getWaves().size(); i++) {
+            WorkStealingThreadPool pool = new WorkStealingThreadPool(parser.getThreads());
+            pool.start();
+            List<ParseWave> parseWave = parser.getWaves().get(i);
+            for(ParseWave product : parseWave){
+                WaveTask task = new WaveTask(product.getProduct(), warehouse, product.getStartId(), product.getQty());
+                pool.submit(task);
+
+                task.getResult().whenResolved(() -> {
+                   // add the products to the concurrent
+                    for(Product product1: task.getResult().get()){
+                        result.add(product1);
+                    }
+                });
+            }
+
+            try {
+                pool.shutdown();
+            } catch (InterruptedException e) {
+
+            }
+        }
+
+        return result;
     }
 
     /**

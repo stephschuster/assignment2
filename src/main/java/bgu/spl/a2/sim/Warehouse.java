@@ -42,6 +42,8 @@ public class Warehouse {
 			promise.resolve(tool);
 		} else {
 			ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(type);
+            if(list == null)
+                list = new ConcurrentLinkedQueue<>();
 			list.add(promise);
 			waitingList.put(type, list);
 		}
@@ -70,7 +72,7 @@ public class Warehouse {
 	 */
 	public ManufactoringPlan getPlan(String product){
 		for (ManufactoringPlan plan: plans) {
-			if(plan.getProductName() == product)
+			if(plan.getProductName().equals(product))
 				return plan;
 		}
 
