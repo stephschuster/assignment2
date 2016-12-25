@@ -46,34 +46,34 @@ public class Simulator {
         Gson gson = gBuilder.create();
         parser = gson.fromJson(reader, ParseJson.class);
 
-        System.out.println(" Number of Threads= "+parser.getThreads());
-        System.out.println("**************Tools***************");
-
-        for (int i = 0; i < parser.getTools().size(); i++) {
-            System.out.println("Tool Name : "+parser.getTools().get(i).getName() +" qty= "+ parser.getTools().get(i).getQty());
-
-        }
-        System.out.println("**************Plans***************");
-
-        for (int i = 0; i < parser.getPlans().size(); i++) {
-            System.out.println("Product : " + parser.getPlans().get(i).getProduct());
-            for (int j = 0; j < parser.getPlans().get(i).getTools().length; j++) {
-                System.out.println(" Tool number "+j+" for product "+parser.getPlans().get(i).getProduct()+ " is "+
-                        parser.getPlans().get(i).getTools()[j]);
-            }
-            for (int j = 0; j < parser.getPlans().get(i).getParts().length; j++) {
-                System.out.println(" Part number "+j+" for product "+parser.getPlans().get(i).getProduct()+ " is "+
-                        parser.getPlans().get(i).getParts()[j]);
-            }
-        }
-        System.out.println("**************Waves***************");
-        for (int i = 0; i < parser.getWaves().size(); i++) {
-            for (int j = 0; j < parser.getWaves().get(i).size(); j++) {
-                System.out.println("Product Name : " + parser.getWaves().get(i).get(j).getProduct() +
-                        " qty= " + parser.getWaves().get(i).get(j).getQty() +
-                        " stardId: " + parser.getWaves().get(i).get(j).getStartId());
-            }
-        }
+//        System.out.println(" Number of Threads= "+parser.getThreads());
+//        System.out.println("**************Tools***************");
+//
+//        for (int i = 0; i < parser.getTools().size(); i++) {
+//            System.out.println("Tool Name : "+parser.getTools().get(i).getName() +" qty= "+ parser.getTools().get(i).getQty());
+//
+//        }
+//        System.out.println("**************Plans***************");
+//
+//        for (int i = 0; i < parser.getPlans().size(); i++) {
+//            System.out.println("Product : " + parser.getPlans().get(i).getProduct());
+//            for (int j = 0; j < parser.getPlans().get(i).getTools().length; j++) {
+//                System.out.println(" Tool number "+j+" for product "+parser.getPlans().get(i).getProduct()+ " is "+
+//                        parser.getPlans().get(i).getTools()[j]);
+//            }
+//            for (int j = 0; j < parser.getPlans().get(i).getParts().length; j++) {
+//                System.out.println(" Part number "+j+" for product "+parser.getPlans().get(i).getProduct()+ " is "+
+//                        parser.getPlans().get(i).getParts()[j]);
+//            }
+//        }
+//        System.out.println("**************Waves***************");
+//        for (int i = 0; i < parser.getWaves().size(); i++) {
+//            for (int j = 0; j < parser.getWaves().get(i).size(); j++) {
+//                System.out.println("Product Name : " + parser.getWaves().get(i).get(j).getProduct() +
+//                        " qty= " + parser.getWaves().get(i).get(j).getQty() +
+//                        " stardId: " + parser.getWaves().get(i).get(j).getStartId());
+//            }
+//        }
 
         //create a new warehouse and add the tools to it
         warehouse = new Warehouse();
@@ -102,6 +102,7 @@ public class Simulator {
 
     //they gave us a main funccton that returns an int
     //why does this main function need to return an int?
+    //just for testing i changed it to void
     public static void main(String[] args)  {
             start();
         }
