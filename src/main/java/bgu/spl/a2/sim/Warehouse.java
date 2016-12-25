@@ -1,14 +1,14 @@
 
-		package bgu.spl.a2.sim;
+package bgu.spl.a2.sim;
 
-		import bgu.spl.a2.sim.tools.Tool;
-		import bgu.spl.a2.sim.conf.ManufactoringPlan;
-		import bgu.spl.a2.Deferred;
+import bgu.spl.a2.sim.tools.Tool;
+import bgu.spl.a2.sim.conf.ManufactoringPlan;
+import bgu.spl.a2.Deferred;
 
-		import java.util.ArrayList;
-		import java.util.LinkedList;
-		import java.util.concurrent.ConcurrentHashMap;
-		import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * A class representing the warehouse in your simulation
@@ -20,9 +20,9 @@
  *
  */
 public class Warehouse {
-	LinkedList<ManufactoringPlan> plans;
-	ConcurrentHashMap<String, ConcurrentLinkedQueue<Tool>> tools;
-	ConcurrentHashMap<String, ConcurrentLinkedQueue<Deferred<Tool>>> waitingList;
+	LinkedList<ManufactoringPlan> plans = new LinkedList<>();
+	ConcurrentHashMap<String, ConcurrentLinkedQueue<Tool>> tools = new ConcurrentHashMap<>();
+	ConcurrentHashMap<String, ConcurrentLinkedQueue<Deferred<Tool>>> waitingList = new ConcurrentHashMap<>();
 
 	/**
 	* Constructor
@@ -93,11 +93,13 @@ public class Warehouse {
 	public void addTool(Tool tool, int qty){
 		for(int i = 0; i < qty; i++) {
 			ConcurrentLinkedQueue<Tool> temp = this.tools.get(tool.getType());
+			if(temp == null)
+				temp = new ConcurrentLinkedQueue<>();
 			temp.add(tool);
 			this.tools.put(tool.getType(), temp);
 
 			ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(tool.getType());
-			if (list.size() > 0)
+			if (list != null && list.size() > 0)
 				list.poll().resolve(tool);
 		}
 	}
