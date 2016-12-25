@@ -42,6 +42,7 @@ public class Product {
 	* @return The product final ID as a long. 
 	* final ID is the ID the product received as the sum of all UseOn(); 
 	*/
+	// TODO add the sum of all the parts
     public long getFinalId() {
     	return finalId;
 	}

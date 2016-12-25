@@ -34,14 +34,14 @@ public class MergeSort extends Task<int[]> {
             System.arraycopy(this.array, 0, firstPart, 0, this.array.length / 2);
 
             MergeSort firstTask = new MergeSort(firstPart);
-            spawn(firstTask);
             tasks.add(firstTask);
 
             int[] secPart = new int[this.array.length - (this.array.length / 2)];
             System.arraycopy(this.array, this.array.length / 2, secPart, 0, this.array.length - (this.array.length / 2));
             MergeSort secTask = new MergeSort(secPart);
-            spawn(secTask);
             tasks.add(secTask);
+
+            spawn(firstTask, secTask);
 
             whenResolved(tasks, () -> {
                 System.out.println("this is the callback from when resolve");
