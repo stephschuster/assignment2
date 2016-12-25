@@ -25,23 +25,60 @@ public class MergeSort extends Task<int[]> {
     @Override
     protected void start() {
         System.out.println("MergeSort started");
-        int sum=0;
-        List<Task<Integer>> tasks = new ArrayList<>();
-        int rows = array.length;
-        for(int i=0;i<rows;i++){
-            SumRow newTask=new SumRow(array,i);
-            spawn(newTask);
-            tasks.add(newTask);
-        }
-        whenResolved(tasks,()->{
-            System.out.println("this is the callback from when resolve");
-                    int[] res = new int[rows];
-                    for(int j=0; j< rows; j++){
-                        res[j] = tasks.get(j).getResult().get();
+
+        if(array.length <= 1){
+            complete(array);
+        } else {
+            List<Task<int[]>> tasks = new ArrayList<>();
+            int[] firstPart = new int[this.array.length / 2];
+            System.arraycopy(this.array, 0, firstPart, 0, this.array.length / 2);
+
+            MergeSort firstTask = new MergeSort(firstPart);
+            spawn(firstTask);
+            tasks.add(firstTask);
+
+            int[] secPart = new int[this.array.length - (this.array.length / 2)];
+            System.arraycopy(this.array, this.array.length / 2, secPart, 0, this.array.length - (this.array.length / 2));
+            MergeSort secTask = new MergeSort(secPart);
+            spawn(secTask);
+            tasks.add(secTask);
+
+            whenResolved(tasks, () -> {
+                System.out.println("this is the callback from when resolve");
+                int[] firstArray = firstTask.getResult().get();
+                int[] secArray = secTask.getResult().get();
+                int[] result = new int[firstArray.length + secArray.length];
+                int i = 0;
+                int j = 0;
+                int r = 0;
+                while (i < firstArray.length && j < secArray.length) {
+                    if (firstArray[i] <= secArray[j]) {
+                        result[r] = firstArray[i];
+                        i++;
+                        r++;
+                    } else {
+                        result[r] = secArray[j];
+                        j++;
+                        r++;
                     }
-                    complete(res);
+                    if (i == firstArray.length) {
+                        while (j < secArray.length) {
+                            result[r] = secArray[j];
+                            r++;
+                            j++;
+                        }
+                    }
+                    if (j == secArray.length) {
+                        while (i < firstArray.length) {
+                            result[r] = firstArray[i];
+                            r++;
+                            i++;
+                        }
+                    }
                 }
-        );
+                complete(result);
+            });
+        }
     }
 
     public static void main(String[] args) throws InterruptedException {
@@ -64,21 +101,4 @@ public class MergeSort extends Task<int[]> {
         pool.shutdown();
     }
 
-}
-
-class SumRow extends Task<Integer> {
-    private int[] array;
-    private int r;
-
-    SumRow(int[] array,int r) {
-        this.array = array;
-        this.r=r;
-    }
-    protected void start(){
-        System.out.println("SumRow started");
-        int sum=0;
-        for(int j=0 ;j<array.length;j++)
-            sum+=array[j];
-        complete(sum);
-    }
 }
