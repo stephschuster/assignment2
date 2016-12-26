@@ -21,18 +21,26 @@ public class GcdScrewDriver implements Tool {
         }
         return reverse;
     }
+
+    private long findGCD(long startId) {
+        long rev = reverse(startId);
+        BigInteger firstNum = new BigInteger(String.valueOf(rev));
+        BigInteger secondNum = new BigInteger(String.valueOf(startId));
+        return Long.parseLong(firstNum.gcd(secondNum).toString());
+    }
     @Override
     public String getType() {
         return toolType;
     }
 
     @Override
+    //i think this is what they meant
     public long useOn(Product p) {
-        long rev = reverse(p.getStartId());
-        BigInteger firstNum = new BigInteger(String.valueOf(rev));
-        BigInteger secondNum = new BigInteger(String.valueOf(p.getStartId()));
-        resultOfToolUse = Long.parseLong(firstNum.gcd(secondNum).toString());
-
-        return resultOfToolUse;
+        long value=p.getStartId();
+        for(Product part : p.getParts()){
+            value+=Math.abs(findGCD(part.getStartId()));
+        }
+        return value;
     }
+
 }

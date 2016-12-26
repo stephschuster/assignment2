@@ -22,6 +22,10 @@ public class NextPrimeHammer implements Tool {
 
     @Override
     public long useOn(Product p) {
-        return findNextPrime(p.getStartId());
+            long value=p.getStartId();
+            for(Product part : p.getParts()){
+                value+=Math.abs(findNextPrime(part.getStartId()));
+            }
+            return value;
+        }
     }
-}
