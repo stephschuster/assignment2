@@ -47,6 +47,10 @@ public class Product {
     	return finalId;
 	}
 
+	public void setFinalId(long finalId) {
+		this.finalId = finalId;
+	}
+
 	/**
 	* @return Returns all parts of this product as a List of Products
 	*/

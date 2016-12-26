@@ -38,19 +38,18 @@ public class ManufactureTask  extends Task<Product> {
             complete(result);
         } else {
             ArrayList<Task<Product>> tasks = new ArrayList<>();
-
+            startId.incrementAndGet();
             // for each part spawn a manufacture task
             for (String part : plan.getParts()) {
                 ManufactureTask task = new ManufactureTask(part, warehouse, startId.get());
                 tasks.add(task);
                 spawn(task);
-                startId.incrementAndGet();
             }
 
             //Assembling part:
             // add the task to when resolve
             whenResolved(tasks, () -> {
-                System.out.println("this is the callback from when resolve");
+                System.out.println("ManufactureTask: this is the callback from when resolve:" + prodType);
                 // add each part to the product
                 for(Task<Product> productTask: tasks){
                     result.addPart(productTask.getResult().get());
@@ -64,19 +63,26 @@ public class ManufactureTask  extends Task<Product> {
                         int count = this.whenResolveToolCounter.addAndGet(1);
 
                         if (plan.getTools().length == count) {
-                            long finalId = this.startId.get();
-                            // TODO dont forget the start id and how to manage it to be unique
+                            long finalId = result.getStartId();
                             // use the useON function to get the id (sum them all)
                             for(Tool borrowed: this.borrowedTools){
-                                for(Product part: result.getParts()){
-                                    finalId = this.startId.addAndGet(borrowed.useOn(part));
-                                }
-                                // TODO how to set the final id?
+                                finalId = this.startId.addAndGet(borrowed.useOn(result));
                             }
+
+                            result.setFinalId(finalId);
                             // complete the task
                             complete(result);
+
+                            // return the tools to warehouse
+                            for(Tool borrowed: this.borrowedTools){
+                                warehouse.releaseTool(borrowed);
+                            }
                         }
                     });
+                }
+
+                if(plan.getTools() == null || plan.getTools().length == 0) {
+                    complete(result);
                 }
             });
 

@@ -44,7 +44,6 @@ public class MergeSort extends Task<int[]> {
             spawn(firstTask, secTask);
 
             whenResolved(tasks, () -> {
-                System.out.println("this is the callback from when resolve");
                 int[] firstArray = firstTask.getResult().get();
                 int[] secArray = secTask.getResult().get();
                 int[] result = new int[firstArray.length + secArray.length];

@@ -47,7 +47,6 @@ public class Processor implements Runnable {
             if (!this.pool.pairs[id].snd.isEmpty()) {
                 Thread t = Thread.currentThread();
                 String name = t.getName();
-                System.out.println("ID: " + this.id + " thread name: " + name + " before handle task");
 
                 this.pool.pairs[id].snd.pollFirst().handle(this);
             }
@@ -58,16 +57,11 @@ public class Processor implements Runnable {
             //else - sleep (until version update)
             else {
                 try {
-                    System.out.println("ID: " + this.id + " waiting");
                     pool.monitor.await(pool.monitor.getVersion());
                 } catch (InterruptedException e) {
                 }
             }
-
-            System.out.println("ID: " + this.id + " have " + this.pool.pairs[id].snd.size() + " tasks enqueue");
         }
-
-        System.out.println("ID: " + this.id + " out of the while loop");
     }
 
 
@@ -79,10 +73,8 @@ public class Processor implements Runnable {
 
             //find the first one you can steal from.
             if (stolen.canStealFromMe()) {
-                System.out.println("stealing from " + i % pool.pairs.length + " to " + this.id);
                 //steal half of his tasks.
                 int half = pool.pairs[i % pool.pairs.length].snd.size() / 2;
-                System.out.println("stealing " + half + "items to " + this.id);
                 for (int j = 0; j < half; j++) {
                     Task task = pool.pairs[i % pool.pairs.length].snd.pollLast();
                     if(task != null) {
@@ -91,8 +83,6 @@ public class Processor implements Runnable {
                     }
 
                 }
-                System.out.println("ID: " + this.id + " now have " + this.pool.pairs[id].snd.size());
-
             }
         }
 
@@ -106,7 +96,6 @@ public class Processor implements Runnable {
     }
 
     /*package*/ boolean canStealFromMe() {
-        System.out.println("ID: " + this.id + " number of tasks that can be stolen" + this.pool.pairs[id].snd.size());
         return pool.pairs[this.id].snd.size() > 1;
     }
 }

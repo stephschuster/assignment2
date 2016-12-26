@@ -86,17 +86,14 @@ public abstract class Task<R> {
      * @param callback the callback to execute once all the results are resolved
      */
     protected final void whenResolved(Collection<? extends Task<?>> tasks, Runnable callback) {
-        System.out.println("whenResolved for task");
         this.whenResolveCounter = new AtomicInteger(0);
         this.callback = callback;
         for (Task curr : tasks) {
             curr.getResult().whenResolved(() -> {
-                System.out.println("whenResolved callback for task");
                 int count = this.whenResolveCounter.addAndGet(1);
                 // check if all the tasks are done
                 if (tasks.size() == count) {
                     readyToComplete = true;
-                    System.out.println("whenResolved callback ready to complete task");
                     // re-add the task to processor
                     this.currentProcessor.addNewTask(this);
                 }

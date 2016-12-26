@@ -28,6 +28,7 @@ public class WaveTask extends Task<ArrayList<Product>> {
         // spawn task as a qty
         for(int i = 0; i < this.qty; i++){
             ManufactureTask task = new ManufactureTask(this.product, this.warehouse, this.startId);
+            this.startId++;
             tasks.add(task);
             spawn(task);
         }

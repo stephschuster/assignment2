@@ -52,7 +52,6 @@ public class WorkStealingThreadPool {
      */
     public void submit(Task<?> task) {
         int rand = (int)(Math.random()*howManyProcessors);
-        System.out.println("pool chose the processor number " + rand);
         pairs[rand].fst.addNewTask(task);
     }
 

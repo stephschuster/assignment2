@@ -60,7 +60,8 @@ public class Warehouse {
 		this.tools.put(tool.getType(), temp);
 
 		ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(tool.getType());
-		if(list.size() > 0)
+
+		if(list != null && list.size() > 0)
 			list.poll().resolve(tool);
 	}
 
@@ -93,10 +94,11 @@ public class Warehouse {
 	 * @param qty - amount of tools of type tool to be stored
 	 */
 	public void addTool(Tool tool, int qty){
+		ConcurrentLinkedQueue<Tool> temp = this.tools.get(tool.getType());
+		if(temp == null)
+			temp = new ConcurrentLinkedQueue<>();
+
 		for(int i = 0; i < qty; i++) {
-			ConcurrentLinkedQueue<Tool> temp = this.tools.get(tool.getType());
-			if(temp == null)
-				temp = new ConcurrentLinkedQueue<>();
 			temp.add(tool);
 			this.tools.put(tool.getType(), temp);
 

@@ -18,6 +18,7 @@ import java.io.FileReader;
 import java.io.Reader;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 
 
 /**
@@ -27,28 +28,18 @@ public class Simulator {
 
     private static ParseJson parser;
     private static Warehouse warehouse;
+    private static WorkStealingThreadPool pool;
 
     /**
      * Begin the simulation
      * Should not be called before attachWorkStealingThreadPool()
      */
     public static ConcurrentLinkedQueue<Product> start() {
-        //first parse the json file
-        Reader reader = null;
-        try {
-            reader = new FileReader("myJ.txt");
-        } catch (FileNotFoundException e) {
-        }
-        GsonBuilder gBuilder = new GsonBuilder();
-        gBuilder.registerTypeAdapter(ParseJson.class, new Deserializer());
-        Gson gson = gBuilder.create();
-        parser = gson.fromJson(reader, ParseJson.class);
-
-
         System.out.println("**************Tools***************");
 
         //create a new warehouse and add the tools to it
         warehouse = new Warehouse();
+
         for (int i = 0; i < parser.getTools().size(); i++) {
             if (parser.getTools().get(i).getName().equalsIgnoreCase("rs-pliers")) {
                 warehouse.addTool(new RandomSumPliers(), parser.getTools().get(i).getQty());
@@ -68,16 +59,22 @@ public class Simulator {
         }
 
         ConcurrentLinkedQueue<Product> result = new ConcurrentLinkedQueue<>();
+        pool.start();
+
         System.out.println("**************Waves***************");
         for (int i = 0; i < parser.getWaves().size(); i++) {
-            WorkStealingThreadPool pool = new WorkStealingThreadPool(parser.getThreads());
-            pool.start();
             List<ParseWave> parseWave = parser.getWaves().get(i);
+
+            CountDownLatch l = new CountDownLatch(parseWave.size());
+
             for(ParseWave product : parseWave){
+                System.out.println("product wave: " + product.getProduct());
                 WaveTask task = new WaveTask(product.getProduct(), warehouse, product.getStartId(), product.getQty());
                 pool.submit(task);
 
                 task.getResult().whenResolved(() -> {
+                    System.out.println("wave task resolved");
+                    l.countDown();
                    // add the products to the concurrent
                     for(Product product1: task.getResult().get()){
                         result.add(product1);
@@ -86,10 +83,19 @@ public class Simulator {
             }
 
             try {
-                pool.shutdown();
+                l.await();
             } catch (InterruptedException e) {
-
+                e.printStackTrace();
             }
+
+            System.out.println("after l await");
+        }
+
+        try {
+            pool.shutdown();
+            System.out.println("pool shutdown");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
         return result;
@@ -101,13 +107,26 @@ public class Simulator {
      * @param myWorkStealingThreadPool - the WorkStealingThreadPool which will be used by the simulator
      */
     public static void attachWorkStealingThreadPool(WorkStealingThreadPool myWorkStealingThreadPool) {
+        pool = myWorkStealingThreadPool;
     }
 
     //they gave us a main funccton that returns an int
     //why does this main function need to return an int?
     //just for testing i changed it to void
     public static void main(String[] args)  {
-            start();
+        //first parse the json file
+        Reader reader = null;
+        try {
+            reader = new FileReader("myJ.txt");
+        } catch (FileNotFoundException e) {
         }
+        GsonBuilder gBuilder = new GsonBuilder();
+        gBuilder.registerTypeAdapter(ParseJson.class, new Deserializer());
+        Gson gson = gBuilder.create();
+        parser = gson.fromJson(reader, ParseJson.class);
+        WorkStealingThreadPool pool = new WorkStealingThreadPool(parser.getThreads());
+        attachWorkStealingThreadPool(pool);
+        start();
+    }
 }
 
