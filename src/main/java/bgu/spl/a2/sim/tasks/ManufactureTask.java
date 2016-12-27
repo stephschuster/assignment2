@@ -32,8 +32,10 @@ public class ManufactureTask  extends Task<Product> {
         // get the plan of the product
         ManufactoringPlan plan = warehouse.getPlan(this.prodType);
 
+        // the task's product
         Product result = new Product(this.startId.get(), this.prodType);
 
+        // if the product's plan doesnt need parts - then complete the product
         if(plan.getParts() == null || plan.getParts().length == 0){
             result.setFinalId(result.getStartId());
             complete(result);
@@ -61,7 +63,7 @@ public class ManufactureTask  extends Task<Product> {
                     toolDeferred.whenResolved(() -> {
                         borrowedTools.add(toolDeferred.get());
                         int count = this.whenResolveToolCounter.addAndGet(1);
-
+                        // if we got all the tools, then start assembling
                         if (plan.getTools().length == count) {
                             long finalId = result.getStartId();
                             // use the useON function to get the id (sum them all)
@@ -80,7 +82,7 @@ public class ManufactureTask  extends Task<Product> {
                         }
                     });
                 }
-
+                // if there is no tools, so complete the product
                 if(plan.getTools() == null || plan.getTools().length == 0) {
                     result.setFinalId(result.getStartId());
                     complete(result);
