@@ -36,10 +36,15 @@ public class GcdScrewDriver implements Tool {
     @Override
     //i think this is what they meant
     public long useOn(Product p) {
-        long value=p.getStartId();
+        long value=0;
+        System.out.println("before gcd Value " + value);
         for(Product part : p.getParts()){
-            value+=Math.abs(findGCD(part.getStartId()));
+            long gcd = Math.abs(findGCD(part.getFinalId()));
+            System.out.println("inside the loop gcd Value " + part.getStartId() + " the gcd is " + gcd);
+            value += gcd;
         }
+
+        System.out.println("after gcd Value " + value);
         return value;
     }
 

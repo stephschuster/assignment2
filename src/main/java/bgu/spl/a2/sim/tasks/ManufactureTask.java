@@ -35,6 +35,7 @@ public class ManufactureTask  extends Task<Product> {
         Product result = new Product(this.startId.get(), this.prodType);
 
         if(plan.getParts() == null || plan.getParts().length == 0){
+            result.setFinalId(result.getStartId());
             complete(result);
         } else {
             ArrayList<Task<Product>> tasks = new ArrayList<>();
@@ -64,10 +65,13 @@ public class ManufactureTask  extends Task<Product> {
 
                         if (plan.getTools().length == count) {
                             long finalId = result.getStartId();
+                            System.out.println("start id: " + finalId);
                             // use the useON function to get the id (sum them all)
                             for(Tool borrowed: this.borrowedTools){
-                                finalId = this.startId.addAndGet(borrowed.useOn(result));
+                                finalId += borrowed.useOn(result);
+                                System.out.println("while id: " + finalId);
                             }
+                            System.out.println("final id: " + finalId);
 
                             result.setFinalId(finalId);
                             // complete the task
@@ -82,6 +86,7 @@ public class ManufactureTask  extends Task<Product> {
                 }
 
                 if(plan.getTools() == null || plan.getTools().length == 0) {
+                    result.setFinalId(result.getStartId());
                     complete(result);
                 }
             });

@@ -22,10 +22,13 @@ public class NextPrimeHammer implements Tool {
 
     @Override
     public long useOn(Product p) {
-            long value=p.getStartId();
+            long value=0;
+        System.out.println("before prime Value " + value);
             for(Product part : p.getParts()){
-                value+=Math.abs(findNextPrime(part.getStartId()));
+                value+=Math.abs(findNextPrime(part.getFinalId()));
             }
+
+        System.out.println("after prime Value " + value);
             return value;
         }
     }
