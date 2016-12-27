@@ -1,18 +1,18 @@
 {
-    "threads": 4,
+    "threads": 20,
     
     "tools": [
         {
             "tool": "gs-driver",
-            "qty": 35
+            "qty": 1
         },
         {
             "tool": "np-hammer",
-            "qty": 17
+            "qty": 5
         },
         {
             "tool": "rs-pliers",
-            "qty": 23
+            "qty": 1
         }
     ],
     "plans": [

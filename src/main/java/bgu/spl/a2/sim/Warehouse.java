@@ -55,14 +55,17 @@ public class Warehouse {
 	 * @param tool - The tool to be returned
 	 */
 	public void releaseTool(Tool tool){
-		ConcurrentLinkedQueue<Tool> temp = this.tools.get(tool.getType());
-		temp.add(tool);
-		this.tools.put(tool.getType(), temp);
 
 		ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(tool.getType());
 
 		if(list != null && list.size() > 0)
 			list.poll().resolve(tool);
+		else{
+			ConcurrentLinkedQueue<Tool> temp = this.tools.get(tool.getType());
+
+			temp.add(tool);
+			this.tools.put(tool.getType(), temp);
+		}
 	}
 
 
@@ -99,12 +102,13 @@ public class Warehouse {
 			temp = new ConcurrentLinkedQueue<>();
 
 		for(int i = 0; i < qty; i++) {
-			temp.add(tool);
-			this.tools.put(tool.getType(), temp);
-
 			ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(tool.getType());
 			if (list != null && list.size() > 0)
 				list.poll().resolve(tool);
+			else {
+				temp.add(tool);
+				this.tools.put(tool.getType(), temp);
+			}
 		}
 	}
 }
