@@ -50,7 +50,6 @@ public class ManufactureTask  extends Task<Product> {
             //Assembling part:
             // add the task to when resolve
             whenResolved(tasks, () -> {
-                System.out.println("ManufactureTask: this is the callback from when resolve:" + prodType);
                 // add each part to the product
                 for(Task<Product> productTask: tasks){
                     result.addPart(productTask.getResult().get());
@@ -65,13 +64,10 @@ public class ManufactureTask  extends Task<Product> {
 
                         if (plan.getTools().length == count) {
                             long finalId = result.getStartId();
-                            System.out.println("start id: " + finalId);
                             // use the useON function to get the id (sum them all)
                             for(Tool borrowed: this.borrowedTools){
                                 finalId += borrowed.useOn(result);
-                                System.out.println("while id: " + finalId);
                             }
-                            System.out.println("final id: " + finalId);
 
                             result.setFinalId(finalId);
                             // complete the task

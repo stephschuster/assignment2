@@ -36,11 +36,10 @@ public class WaveTask extends Task<ArrayList<Product>> {
         ArrayList<Product> result = new ArrayList<>();
         // waits to all to be resolved
         whenResolved(tasks, () -> {
-            for(ManufactureTask task : tasks){
-                Product prod = task.getResult().get();
+            for(ManufactureTask task1 : tasks){
+                Product prod = task1.getResult().get();
                 result.add(prod);
             }
-
             complete(result);
         });
     }

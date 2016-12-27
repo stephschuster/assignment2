@@ -24,12 +24,10 @@ public class RandomSumPliers implements Tool {
     @Override
     public long useOn(Product p) {
             long value=0;
-        System.out.println("before random Value " + value);
             for(Product part : p.getParts()){
                 value+=Math.abs(sum(part.getFinalId()));
             }
 
-        System.out.println("after random Value " + value);
             return value;
         }
     }
