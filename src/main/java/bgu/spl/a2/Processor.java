@@ -1,6 +1,8 @@
 package bgu.spl.a2;
 
 import java.util.LinkedList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * this class represents a single work stealing processor, it is
@@ -14,7 +16,7 @@ import java.util.LinkedList;
  *
  */
 public class Processor implements Runnable {
-
+    AtomicInteger taskCounter = new AtomicInteger(0);
     private final WorkStealingThreadPool pool;
     private final int id;
 
@@ -41,11 +43,14 @@ public class Processor implements Runnable {
 
     @Override
     public void run() {
-        // this is enough?!
-        while (!this.pool.isShutdown || !this.pool.pairs[id].snd.isEmpty() || steal()) {
+        while (!this.pool.isShutdown || !this.pool.pairs[id].snd.isEmpty()) {
             //if there is a task - do the task
             if (!this.pool.pairs[id].snd.isEmpty()) {
-                this.pool.pairs[id].snd.pollFirst().handle(this);
+                Task task = this.pool.pairs[id].snd.pollFirst();
+                if(task != null){
+                    taskCounter.decrementAndGet();
+                    task.handle(this);
+                }
             }
             //else if no tasks in linked list - steal()
             else {
@@ -65,7 +70,8 @@ public class Processor implements Runnable {
         boolean result = false;
         //loop through the processors starting from the one next to me.
         for (int i = id + 1; i < pool.pairs.length - 1 + id && !result; i++) {
-            Processor stolen = pool.pairs[i % pool.pairs.length].fst;
+            int index = i % pool.pairs.length;
+            Processor stolen = pool.pairs[index].fst;
 
             //find the first one you can steal from.
             if (stolen.canStealFromMe()) {
@@ -73,6 +79,7 @@ public class Processor implements Runnable {
                 int half = pool.pairs[i % pool.pairs.length].snd.size() / 2;
                 for (int j = 0; j < half; j++) {
                     Task task = pool.pairs[i % pool.pairs.length].snd.pollLast();
+                    pool.pairs[i % pool.pairs.length].fst.taskCounter.decrementAndGet();
                     if(task != null) {
                         this.addNewTask(task);
                         result = true;
@@ -86,9 +93,15 @@ public class Processor implements Runnable {
         return result;
     }
 
-    /*package*/ void addNewTask(Task task) {
+    /*package*/ synchronized void addNewTask(Task task) {
+       // System.out.println("before adding new task: " + this.pool.pairs[id].snd.size() + " task name: " + task.name);
+
+       taskCounter.incrementAndGet();
+
         this.pool.pairs[id].snd.add(task);
         this.pool.monitor.inc();
+
+     //   System.out.println("after adding new task: " + this.pool.pairs[id].snd.size()+ " task name: " + task.name   );
     }
 
     /*package*/ boolean canStealFromMe() {

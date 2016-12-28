@@ -20,11 +20,14 @@ public class MergeSort extends Task<int[]> {
 
     public MergeSort(int[] array) {
         this.array = array;
+        this.name = "array length " + array.length;
+        //System.out.println("NEw task created: " + this.name);
     }
 
     @Override
     protected void start() {
         if(array.length <= 1){
+           // System.out.println("Before call Task Cpmpleted: array length" + array.length);
             complete(array);
         } else {
             List<Task<int[]>> tasks = new ArrayList<>();
@@ -73,29 +76,35 @@ public class MergeSort extends Task<int[]> {
                         }
                     }
                 }
+                //System.out.println("Before call Task Cpmpleted: array length" + array.length);
                 complete(result);
             });
         }
     }
 
     public static void main(String[] args) throws InterruptedException {
-        WorkStealingThreadPool pool = new WorkStealingThreadPool(4);
-        int n = 1000000; //you may check on different number of elements if you like
-        int[] array = new Random().ints(n).toArray();
+        for(int i = 0; i < 500; i++) {
+            WorkStealingThreadPool pool = new WorkStealingThreadPool(20);
+            int n = 10000; //you may check on different number of elements if you like
+            int[] array = new Random().ints(n).toArray();
 
-        MergeSort task = new MergeSort(array);
+            MergeSort task = new MergeSort(array);
 
-        CountDownLatch l = new CountDownLatch(1);
-        pool.start();
-        pool.submit(task);
-        task.getResult().whenResolved(() -> {
-            //warning - a large print!! - you can remove this line if you wish
-            System.out.println(Arrays.toString(task.getResult().get()));
-            l.countDown();
-        });
+            CountDownLatch l = new CountDownLatch(1);
+            pool.start();
+            pool.submit(task);
+            task.getResult().whenResolved(() -> {
+                //warning - a large print!! - you can remove this line if you wish
+                System.out.println(Arrays.toString(task.getResult().get()));
+                l.countDown();
+            });
+            System.out.println(i);
 
-        l.await();
-        pool.shutdown();
+            l.await();
+            pool.shutdown();
+
+            Thread.sleep(200);
+        }
     }
 
 }

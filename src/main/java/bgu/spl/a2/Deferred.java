@@ -1,6 +1,7 @@
 package bgu.spl.a2;
 
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * this class represents a deferred result i.e., an object that eventually will
@@ -20,7 +21,7 @@ public class Deferred<T> {
     private T myT;
     private boolean isResolved = false;
     //we can make a new list in the constructor instead
-    private LinkedList<Runnable> callBackList = new LinkedList<>() ;
+    private ConcurrentLinkedDeque<Runnable> callBackList = new ConcurrentLinkedDeque<>() ;
 
     /**
      *
@@ -29,7 +30,7 @@ public class Deferred<T> {
      * @throws IllegalStateException in the case where this method is called and
      * this object is not yet resolved
      */
-    public T get() {
+    public synchronized T get() {
         if(isResolved()) {
             return myT;
         } else {
@@ -43,7 +44,7 @@ public class Deferred<T> {
      * @return true if this object has been resolved - i.e., if the method
      * {@link #resolve(java.lang.Object)} has been called on this object before.
      */
-    public boolean isResolved() {
+    public synchronized boolean isResolved() {
         return isResolved;
     }
 
@@ -59,7 +60,7 @@ public class Deferred<T> {
      * @throws IllegalStateException in the case where this object is already
      * resolved
      */
-    public void resolve(T value) {
+    public synchronized void resolve(T value) {
         if( isResolved()) {
             throw new IllegalStateException("already resolved");
         } else {
@@ -67,7 +68,7 @@ public class Deferred<T> {
             isResolved = true;
             //we can change this to an iterator if you want
             while(!callBackList.isEmpty()) {
-                Runnable callback = callBackList.remove(0);
+                Runnable callback = callBackList.poll();
                 callback.run();
             }
         }
@@ -86,7 +87,7 @@ public class Deferred<T> {
      * @param callback the callback to be called when the deferred object is
      * resolved
      */
-    public void whenResolved(Runnable callback) {
+    public synchronized void whenResolved(Runnable callback) {
         if(isResolved()) {
             callback.run();
         } else {

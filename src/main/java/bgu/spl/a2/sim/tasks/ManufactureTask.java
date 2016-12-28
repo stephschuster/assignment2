@@ -71,25 +71,6 @@ public class ManufactureTask  extends Task<Product> {
                         finalId[0] += toolDeferred.get().useOn(result);
                         warehouse.releaseTool(toolDeferred.get());
                         usedTools.countDown();
-//                        borrowedTools.add(toolDeferred.get());
-//                        int count = this.whenResolveToolCounter.addAndGet(1);
-//                        // if we got all the tools, then start assembling
-//                        if (plan.getTools().length == count) {
-//                            long finalId = result.getStartId();
-//                            // use the useON function to get the id (sum them all)
-//                            for(Tool borrowed: this.borrowedTools){
-//                                finalId += borrowed.useOn(result);
-//                            }
-//
-//                            result.setFinalId(finalId);
-//                            // complete the task
-//                            complete(result);
-//
-//                            // return the tools to warehouse
-//                            for(Tool borrowed: this.borrowedTools){
-//                                warehouse.releaseTool(borrowed);
-//                            }
-//                        }
                     });
                 }
 

@@ -21,7 +21,8 @@ public abstract class Task<R> {
     boolean readyToComplete;
     boolean started;
     Runnable callback;
-
+    public String name;
+    static AtomicInteger taskCounter  = new AtomicInteger(0);
     /**
      * start handling the task - note that this method is protected, a handler
      * cannot call it directly but instead must use the
@@ -55,11 +56,11 @@ public abstract class Task<R> {
         if (this.readyToComplete && this.callback != null && this.started) {
             this.callback.run();
         } else if(!this.started){
+            this.started = true;
             // this will spawn, add callback, then, after all the tasks are finished
             // the callback will be called and the complete function will be called
             // thats the way we "re-add" the function to the process
             this.start();
-            this.started = true;
         }
     }
 
@@ -86,11 +87,12 @@ public abstract class Task<R> {
      * @param callback the callback to execute once all the results are resolved
      */
     protected final void whenResolved(Collection<? extends Task<?>> tasks, Runnable callback) {
-        this.whenResolveCounter = new AtomicInteger(0);
         this.callback = callback;
         for (Task curr : tasks) {
             curr.getResult().whenResolved(() -> {
                 int count = this.whenResolveCounter.addAndGet(1);
+         //       System.out.println("Callback from: " + curr.name + " to the task " + this.name + " current callbacks: "
+        //                + count + " expecting " + tasks.size());
                 // check if all the tasks are done
                 if (tasks.size() == count) {
                     readyToComplete = true;
@@ -108,6 +110,8 @@ public abstract class Task<R> {
      * @param result - the task calculated result
      */
     protected final void complete(R result) {
+        int res = taskCounter.incrementAndGet();
+        //System.out.println("Task Cpmpleted: " + res);
         // do whe need to add something else here?
         this.deferred.resolve(result);
     }

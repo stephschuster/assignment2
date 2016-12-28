@@ -51,8 +51,10 @@ public class WorkStealingThreadPool {
      * @param task the task to execute
      */
     public void submit(Task<?> task) {
-        int rand = (int)(Math.random()*howManyProcessors);
-        pairs[rand].fst.addNewTask(task);
+        if(!isShutdown) {
+            int rand = (int) (Math.random() * howManyProcessors);
+            pairs[rand].fst.addNewTask(task);
+        }
     }
 
     /**
@@ -80,8 +82,10 @@ public class WorkStealingThreadPool {
      * start the threads belongs to this thread pool
      */
     public void start() {
-        for(int i=0; i<howManyProcessors; i++) {
-            arrayThread[i].start();
+        if(!isShutdown) {
+            for (int i = 0; i < howManyProcessors; i++) {
+                arrayThread[i].start();
+            }
         }
     }
 
