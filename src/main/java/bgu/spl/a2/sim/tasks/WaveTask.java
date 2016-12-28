@@ -5,11 +5,13 @@ import bgu.spl.a2.sim.Product;
 import bgu.spl.a2.sim.Warehouse;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Created by stephanieschustermann on 25/12/2016.
  */
-public class WaveTask extends Task<ArrayList<Product>> {
+public class WaveTask extends Task<CopyOnWriteArrayList<Product>> {
     int qty;
     long startId;
     Warehouse warehouse;
@@ -33,13 +35,15 @@ public class WaveTask extends Task<ArrayList<Product>> {
             spawn(task);
         }
 
-        ArrayList<Product> result = new ArrayList<>();
+        CopyOnWriteArrayList<Product> result = new CopyOnWriteArrayList<>();
         // waits to all to be resolved
         whenResolved(tasks, () -> {
             for(ManufactureTask task1 : tasks){
                 Product prod = task1.getResult().get();
                 result.add(prod);
             }
+
+            System.out.println("$$$$$$$$$$$$$$ wave task finished " + this.product );
             complete(result);
         });
     }

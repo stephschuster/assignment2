@@ -8,6 +8,7 @@ import bgu.spl.a2.sim.conf.ManufactoringPlan;
 import bgu.spl.a2.sim.tools.Tool;
 
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -17,9 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ManufactureTask  extends Task<Product> {
     private String prodType;
     private Warehouse warehouse;
-    private ArrayList<Tool> borrowedTools = new ArrayList<>();
     private AtomicLong startId;
-    AtomicInteger whenResolveToolCounter  = new AtomicInteger(0);
 
     public ManufactureTask(String productType, Warehouse warehouse, long startId){
         this.prodType = productType;
@@ -57,36 +56,52 @@ public class ManufactureTask  extends Task<Product> {
                     result.addPart(productTask.getResult().get());
                 }
 
+                int toolsAmount = plan.getTools() == null ? 0 : plan.getTools().length;
+                System.out.println("************* toolsAmount " + toolsAmount );
+                CountDownLatch usedTools = new CountDownLatch(toolsAmount);
+                final long[] finalId = {result.getStartId()};
                 // for each tool get a when resolve callback
                 for (String tool : plan.getTools()) {
                     Deferred<Tool> toolDeferred = warehouse.acquireTool(tool);
                     toolDeferred.whenResolved(() -> {
-                        borrowedTools.add(toolDeferred.get());
-                        int count = this.whenResolveToolCounter.addAndGet(1);
-                        // if we got all the tools, then start assembling
-                        if (plan.getTools().length == count) {
-                            long finalId = result.getStartId();
-                            // use the useON function to get the id (sum them all)
-                            for(Tool borrowed: this.borrowedTools){
-                                finalId += borrowed.useOn(result);
-                            }
-
-                            result.setFinalId(finalId);
-                            // complete the task
-                            complete(result);
-
-                            // return the tools to warehouse
-                            for(Tool borrowed: this.borrowedTools){
-                                warehouse.releaseTool(borrowed);
-                            }
+                        if(toolDeferred.get() == null){
+                            System.out.println("null");
                         }
+                        System.out.println("************* tool when resolve " + toolDeferred.get().getType() + " on product " + result.getName() );
+                        finalId[0] += toolDeferred.get().useOn(result);
+                        warehouse.releaseTool(toolDeferred.get());
+                        usedTools.countDown();
+//                        borrowedTools.add(toolDeferred.get());
+//                        int count = this.whenResolveToolCounter.addAndGet(1);
+//                        // if we got all the tools, then start assembling
+//                        if (plan.getTools().length == count) {
+//                            long finalId = result.getStartId();
+//                            // use the useON function to get the id (sum them all)
+//                            for(Tool borrowed: this.borrowedTools){
+//                                finalId += borrowed.useOn(result);
+//                            }
+//
+//                            result.setFinalId(finalId);
+//                            // complete the task
+//                            complete(result);
+//
+//                            // return the tools to warehouse
+//                            for(Tool borrowed: this.borrowedTools){
+//                                warehouse.releaseTool(borrowed);
+//                            }
+//                        }
                     });
                 }
-                // if there is no tools, so complete the product
-                if(plan.getTools() == null || plan.getTools().length == 0) {
-                    result.setFinalId(result.getStartId());
-                    complete(result);
+
+                try {
+                    usedTools.await();
+
+                    System.out.println("************* get all the tools of product " + result.getName() );
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
+                result.setFinalId(finalId[0]);
+                complete(result);
             });
 
         }

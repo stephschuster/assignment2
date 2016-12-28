@@ -10,11 +10,11 @@ public class NextPrimeHammer implements Tool {
     private long resultOfToolUse;
 
 
-    private long findNextPrime(long n)
-    {
+    private long findNextPrime(long n) {
         BigInteger b = new BigInteger(String.valueOf(n));
         return Long.parseLong(b.nextProbablePrime().toString());
     }
+
     @Override
     public String getType() {
         return toolType;
@@ -22,11 +22,12 @@ public class NextPrimeHammer implements Tool {
 
     @Override
     public long useOn(Product p) {
-            long value=0;
-            for(Product part : p.getParts()){
-                value+=Math.abs(findNextPrime(part.getFinalId()));
-            }
-
-            return value;
+        long value = 0;
+        for (Product part : p.getParts()) {
+            value += Math.abs(findNextPrime(part.getFinalId()));
         }
+
+        return value;
     }
+}
+

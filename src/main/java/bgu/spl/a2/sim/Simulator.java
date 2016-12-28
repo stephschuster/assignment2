@@ -36,8 +36,6 @@ public class Simulator {
      * Should not be called before attachWorkStealingThreadPool()
      */
     public static ConcurrentLinkedQueue<Product> start() {
-        System.out.println("**************Tools***************");
-
         //create a new warehouse and add the tools to it
         warehouse = new Warehouse();
 
@@ -51,8 +49,6 @@ public class Simulator {
             }
         }
 
-        System.out.println("**************Plans***************");
-
         for (int i = 0; i < parser.getPlans().size(); i++) {
             ParsePlan parsePlan =  parser.getPlans().get(i);
             ManufactoringPlan plan = new ManufactoringPlan(parsePlan.getProduct(), parsePlan.getParts(), parsePlan.getTools());
@@ -63,35 +59,36 @@ public class Simulator {
         pool.start();
         LinkedList<String> rightOrderString = new LinkedList<>();
 
-        System.out.println("**************Waves***************");
         for (int i = 0; i < parser.getWaves().size(); i++) {
             List<ParseWave> parseWave = parser.getWaves().get(i);
-            CountDownLatch l = new CountDownLatch(parseWave.size());
+            CountDownLatch downLatch = new CountDownLatch(parseWave.size());
 
             for(ParseWave product : parseWave){
                 WaveTask task = new WaveTask(product.getProduct(), warehouse, product.getStartId(), product.getQty());
                 pool.submit(task);
-
+                System.out.println("submint new task");
                 //add the products name in the right order (how they will show at the end)
                 for (int j = 0; j < product.getQty(); j++) {
                     rightOrderString.add(product.getProduct());
                 }
 
-
                 task.getResult().whenResolved(() -> {
+                    System.out.println("task resolved");
                     // add the products to the concurrent
                         for (Product product1 : task.getResult().get()) {
                             result.add(product1);
                         }
                     //let the next wave begin
-                    l.countDown();
+                    downLatch.countDown();
                 });
 
 
             }
 
             try {
-                l.await();
+                System.out.println("down lanch before waiting");
+                downLatch.await();
+                System.out.println("down lanch after waiting");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -143,86 +140,92 @@ public class Simulator {
     //why does this main function need to return an int?
     //just for testing i changed it to void
     public static void main(String[] args)  {
-        //first parse the json file
-        Reader reader = null;
-        File myArgs = new File(args[0]);
-        try {
-            reader = new FileReader(myArgs);
-        } catch (FileNotFoundException e) {
+
+        for(int i = 0; i < 500; i++){
+            //first parse the json file
+            Reader reader = null;
+            File myArgs = new File(args[0]);
+            try {
+                reader = new FileReader(myArgs);
+            } catch (FileNotFoundException e) {
+            }
+
+            GsonBuilder gBuilder = new GsonBuilder();
+            gBuilder.registerTypeAdapter(ParseJson.class, new Deserializer());
+            Gson gson = gBuilder.create();
+            parser = gson.fromJson(reader, ParseJson.class);
+            WorkStealingThreadPool pool = new WorkStealingThreadPool(parser.getThreads());
+            attachWorkStealingThreadPool(pool);
+
+
+            //output the linked queue
+            ConcurrentLinkedQueue<Product> SimulationResult;
+            SimulationResult = start();
+            FileOutputStream fout = null;
+            ObjectOutputStream oos = null;
+
+            try {
+                fout = new FileOutputStream("result.ser");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            try {
+                oos = new ObjectOutputStream(fout);
+                oos.writeObject(SimulationResult);
+                fout.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            //********************************************Just for Testing!! **********************************************
+            //check that the content of result.ser are accurate
+
+            FileInputStream inputFileStream = null;
+            try {
+                inputFileStream = new FileInputStream("result.ser");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            ObjectInputStream objectInputStream = null;
+            try {
+                objectInputStream = new ObjectInputStream(inputFileStream);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            ConcurrentLinkedQueue<Product> verifyResult = null;
+
+            try {
+                verifyResult = (ConcurrentLinkedQueue<Product>) objectInputStream.readObject();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+            try {
+                objectInputStream.close();
+                inputFileStream.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            System.out.println("the size of the Queue is " + verifyResult.size());
+
+            for (Product p : verifyResult
+                    ) {
+                System.out.println("the product is " + p.getName() + " and id " + p.getFinalId());
+            }
+
+            //********************************************Just for Testing!! **********************************************
+
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("**************** " + i);
+
         }
-
-        GsonBuilder gBuilder = new GsonBuilder();
-        gBuilder.registerTypeAdapter(ParseJson.class, new Deserializer());
-        Gson gson = gBuilder.create();
-        parser = gson.fromJson(reader, ParseJson.class);
-        WorkStealingThreadPool pool = new WorkStealingThreadPool(parser.getThreads());
-        attachWorkStealingThreadPool(pool);
-
-
-        //output the linked queue
-        ConcurrentLinkedQueue<Product> SimulationResult;
-        SimulationResult = start();
-        FileOutputStream fout = null;
-        ObjectOutputStream oos = null;
-
-        try {
-            fout = new FileOutputStream("result.ser");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        try {
-            oos = new ObjectOutputStream(fout);
-            oos.writeObject(SimulationResult);
-            fout.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //********************************************Just for Testing!! **********************************************
-        //check that the content of result.ser are accurate
-
-        FileInputStream inputFileStream = null;
-        try {
-            inputFileStream = new FileInputStream("result.ser");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        ObjectInputStream objectInputStream = null;
-        try {
-            objectInputStream = new ObjectInputStream(inputFileStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        ConcurrentLinkedQueue<Product> verifyResult =null;
-
-        try {
-            verifyResult = (ConcurrentLinkedQueue<Product>) objectInputStream.readObject();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        try {
-            objectInputStream.close();
-            inputFileStream.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println("the size of the Queue is "+ verifyResult.size());
-
-        for (Product p: verifyResult
-             ) {
-            System.out.println("the product is "+p.getName() + " and id "+p.getFinalId());
-        }
-
-        //********************************************Just for Testing!! **********************************************
-
-
-
-
-
     }
 }
 

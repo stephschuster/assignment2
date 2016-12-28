@@ -27,7 +27,7 @@ public class VersionMonitor {
     }
 
 
-    public int getVersion() {
+    public synchronized int getVersion() {
         return versionNum;
     }
 

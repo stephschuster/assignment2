@@ -5,7 +5,6 @@ import bgu.spl.a2.sim.tools.Tool;
 import bgu.spl.a2.sim.conf.ManufactoringPlan;
 import bgu.spl.a2.Deferred;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -20,6 +19,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  *
  */
 public class Warehouse {
+    Object toolObject = new Object();
 	LinkedList<ManufactoringPlan> plans = new LinkedList<>();
 	ConcurrentHashMap<String, ConcurrentLinkedQueue<Tool>> tools = new ConcurrentHashMap<>();
 	ConcurrentHashMap<String, ConcurrentLinkedQueue<Deferred<Tool>>> waitingList = new ConcurrentHashMap<>();
@@ -36,18 +36,21 @@ public class Warehouse {
 	 * @return a deferred promise for the  requested tool
 	 */
 	public Deferred<Tool> acquireTool(String type){
-		Deferred<Tool> promise = new Deferred<>();
-		if(this.tools.get(type).size() > 0){
-			Tool tool = this.tools.get(type).poll();
-			promise.resolve(tool);
-		} else {
-			ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(type);
-            if(list == null)
-                list = new ConcurrentLinkedQueue<>();
-			list.add(promise);
-			waitingList.put(type, list);
-		}
-		return promise;
+        synchronized (toolObject) {
+            Deferred<Tool> promise = new Deferred<>();
+			System.out.println("**************** acquire tool size: " + this.tools.get(type).size() );
+            if (this.tools.get(type).size() > 0) {
+                Tool tool = this.tools.get(type).poll();
+                promise.resolve(tool);
+            } else {
+                ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(type);
+                if (list == null)
+                    list = new ConcurrentLinkedQueue<>();
+                list.add(promise);
+                waitingList.put(type, list);
+            }
+            return promise;
+        }
 	}
 
 	/**
@@ -55,17 +58,19 @@ public class Warehouse {
 	 * @param tool - The tool to be returned
 	 */
 	public void releaseTool(Tool tool){
+        synchronized (toolObject) {
+			System.out.println("**************** release tool size: " + this.tools.get(tool.getType()).size() );
+            ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(tool.getType());
 
-		ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(tool.getType());
+            if (list != null && list.size() > 0)
+                list.poll().resolve(tool);
+            else {
+                ConcurrentLinkedQueue<Tool> temp = this.tools.get(tool.getType());
 
-		if(list != null && list.size() > 0)
-			list.poll().resolve(tool);
-		else{
-			ConcurrentLinkedQueue<Tool> temp = this.tools.get(tool.getType());
-
-			temp.add(tool);
-			this.tools.put(tool.getType(), temp);
-		}
+                temp.add(tool);
+                this.tools.put(tool.getType(), temp);
+            }
+        }
 	}
 
 
@@ -97,18 +102,21 @@ public class Warehouse {
 	 * @param qty - amount of tools of type tool to be stored
 	 */
 	public void addTool(Tool tool, int qty){
-		ConcurrentLinkedQueue<Tool> temp = this.tools.get(tool.getType());
-		if(temp == null)
-			temp = new ConcurrentLinkedQueue<>();
+        synchronized (toolObject) {
+            ConcurrentLinkedQueue<Tool> temp = this.tools.get(tool.getType());
+            if (temp == null)
+                temp = new ConcurrentLinkedQueue<>();
 
-		for(int i = 0; i < qty; i++) {
-			ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(tool.getType());
-			if (list != null && list.size() > 0)
-				list.poll().resolve(tool);
-			else {
-				temp.add(tool);
-				this.tools.put(tool.getType(), temp);
-			}
-		}
+            for (int i = 0; i < qty; i++) {
+                ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(tool.getType());
+                if (list != null && list.size() > 0)
+                    list.poll().resolve(ToolFactory.getCopyOfTool(tool));
+                else {
+                    temp.add(ToolFactory.getCopyOfTool(tool));
+                    this.tools.put(tool.getType(), temp);
+                }
+            }
+			System.out.println("**************** add tool size: " + this.tools.get(tool.getType()).size() );
+        }
 	}
 }

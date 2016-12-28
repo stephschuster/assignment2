@@ -7,6 +7,7 @@ import java.util.Random;
 
 public class RandomSumPliers implements Tool {
     private String toolType = "rs-pliers";
+
     @Override
     public String getType() {
         return toolType;
@@ -15,7 +16,7 @@ public class RandomSumPliers implements Tool {
     private long sum(long seed) {
         long result = 0;
         Random rnd = new Random(seed);
-        for(int i=0; i<(seed%10000); i++) {
+        for (int i = 0; i < (seed % 10000); i++) {
             result += rnd.nextInt();
         }
         return result;
@@ -23,12 +24,11 @@ public class RandomSumPliers implements Tool {
 
     @Override
     public long useOn(Product p) {
-            long value=0;
-            for(Product part : p.getParts()){
-                value+=Math.abs(sum(part.getFinalId()));
-            }
-
-            return value;
+        long value = 0;
+        for (Product part : p.getParts()) {
+            value += Math.abs(sum(part.getFinalId()));
         }
-    }
 
+        return value;
+    }
+}

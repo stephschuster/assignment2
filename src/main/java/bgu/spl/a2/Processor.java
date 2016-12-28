@@ -42,23 +42,19 @@ public class Processor implements Runnable {
     @Override
     public void run() {
         // this is enough?!
-        while (!this.pool.isShutdown || !this.pool.pairs[id].snd.isEmpty()) {
+        while (!this.pool.isShutdown || !this.pool.pairs[id].snd.isEmpty() || steal()) {
             //if there is a task - do the task
             if (!this.pool.pairs[id].snd.isEmpty()) {
-                Thread t = Thread.currentThread();
-                String name = t.getName();
-
                 this.pool.pairs[id].snd.pollFirst().handle(this);
             }
             //else if no tasks in linked list - steal()
-            else if (steal()) {
-                //not sure if to do anything in here
-            }
-            //else - sleep (until version update)
             else {
-                try {
-                    pool.monitor.await(pool.monitor.getVersion());
-                } catch (InterruptedException e) {
+                int version = pool.monitor.getVersion();
+                if (!steal() && !this.pool.isShutdown) {
+                    try {
+                        pool.monitor.await(version);
+                    } catch (InterruptedException e) {
+                    }
                 }
             }
         }
