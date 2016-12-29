@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  */
 public class Processor implements Runnable {
-    AtomicInteger taskCounter = new AtomicInteger(0);
     private final WorkStealingThreadPool pool;
     private final int id;
 
@@ -44,17 +43,16 @@ public class Processor implements Runnable {
     @Override
     public void run() {
         while (!this.pool.isShutdown || !this.pool.pairs[id].snd.isEmpty()) {
+            int version = pool.monitor.getVersion();
             //if there is a task - do the task
             if (!this.pool.pairs[id].snd.isEmpty()) {
                 Task task = this.pool.pairs[id].snd.pollFirst();
                 if(task != null){
-                    taskCounter.decrementAndGet();
                     task.handle(this);
                 }
             }
             //else if no tasks in linked list - steal()
             else {
-                int version = pool.monitor.getVersion();
                 if (!steal() && !this.pool.isShutdown) {
                     try {
                         pool.monitor.await(version);
@@ -79,7 +77,6 @@ public class Processor implements Runnable {
                 int half = pool.pairs[i % pool.pairs.length].snd.size() / 2;
                 for (int j = 0; j < half; j++) {
                     Task task = pool.pairs[i % pool.pairs.length].snd.pollLast();
-                    pool.pairs[i % pool.pairs.length].fst.taskCounter.decrementAndGet();
                     if(task != null) {
                         this.addNewTask(task);
                         result = true;
@@ -94,14 +91,8 @@ public class Processor implements Runnable {
     }
 
     /*package*/ synchronized void addNewTask(Task task) {
-       // System.out.println("before adding new task: " + this.pool.pairs[id].snd.size() + " task name: " + task.name);
-
-       taskCounter.incrementAndGet();
-
         this.pool.pairs[id].snd.add(task);
         this.pool.monitor.inc();
-
-     //   System.out.println("after adding new task: " + this.pool.pairs[id].snd.size()+ " task name: " + task.name   );
     }
 
     /*package*/ boolean canStealFromMe() {

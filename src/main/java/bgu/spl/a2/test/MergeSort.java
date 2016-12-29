@@ -95,7 +95,7 @@ public class MergeSort extends Task<int[]> {
             pool.submit(task);
             task.getResult().whenResolved(() -> {
                 //warning - a large print!! - you can remove this line if you wish
-                System.out.println(Arrays.toString(task.getResult().get()));
+               // System.out.println(Arrays.toString(task.getResult().get()));
                 l.countDown();
             });
             System.out.println(i);

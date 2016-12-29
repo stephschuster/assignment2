@@ -30,7 +30,7 @@ public class Deferred<T> {
      * @throws IllegalStateException in the case where this method is called and
      * this object is not yet resolved
      */
-    public synchronized T get() {
+    public T get() {
         if(isResolved()) {
             return myT;
         } else {

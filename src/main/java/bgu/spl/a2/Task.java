@@ -22,7 +22,6 @@ public abstract class Task<R> {
     boolean started;
     Runnable callback;
     public String name;
-    static AtomicInteger taskCounter  = new AtomicInteger(0);
     /**
      * start handling the task - note that this method is protected, a handler
      * cannot call it directly but instead must use the
@@ -90,11 +89,8 @@ public abstract class Task<R> {
         this.callback = callback;
         for (Task curr : tasks) {
             curr.getResult().whenResolved(() -> {
-                int count = this.whenResolveCounter.addAndGet(1);
-         //       System.out.println("Callback from: " + curr.name + " to the task " + this.name + " current callbacks: "
-        //                + count + " expecting " + tasks.size());
                 // check if all the tasks are done
-                if (tasks.size() == count) {
+                if (tasks.size() == this.whenResolveCounter.addAndGet(1)) {
                     readyToComplete = true;
                     // re-add the task to processor
                     this.currentProcessor.addNewTask(this);
@@ -110,7 +106,6 @@ public abstract class Task<R> {
      * @param result - the task calculated result
      */
     protected final void complete(R result) {
-        int res = taskCounter.incrementAndGet();
         //System.out.println("Task Cpmpleted: " + res);
         // do whe need to add something else here?
         this.deferred.resolve(result);
