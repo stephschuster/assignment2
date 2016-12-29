@@ -21,7 +21,6 @@ public class VersionMonitor {
     private boolean isWaiting;
     private int goalVersion = 0; // will change in the future. first time there is no one waiting so doesnt matter
 
-    //in the forum they said we can add package protected constructor here
     /*package*/ VersionMonitor() {
                 isWaiting = false; //first time no one is waiting
     }

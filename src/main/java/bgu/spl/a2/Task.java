@@ -106,8 +106,6 @@ public abstract class Task<R> {
      * @param result - the task calculated result
      */
     protected final void complete(R result) {
-        //System.out.println("Task Cpmpleted: " + res);
-        // do whe need to add something else here?
         this.deferred.resolve(result);
     }
 

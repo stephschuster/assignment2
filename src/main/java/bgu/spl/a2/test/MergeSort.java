@@ -21,13 +21,11 @@ public class MergeSort extends Task<int[]> {
     public MergeSort(int[] array) {
         this.array = array;
         this.name = "array length " + array.length;
-        //System.out.println("NEw task created: " + this.name);
     }
 
     @Override
     protected void start() {
         if(array.length <= 1){
-           // System.out.println("Before call Task Cpmpleted: array length" + array.length);
             complete(array);
         } else {
             List<Task<int[]>> tasks = new ArrayList<>();
@@ -76,7 +74,6 @@ public class MergeSort extends Task<int[]> {
                         }
                     }
                 }
-                //System.out.println("Before call Task Cpmpleted: array length" + array.length);
                 complete(result);
             });
         }
