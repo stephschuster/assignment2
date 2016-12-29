@@ -13,9 +13,7 @@ import bgu.spl.a2.sim.tools.NextPrimeHammer;
 import bgu.spl.a2.sim.tools.RandomSumPliers;
 import com.google.gson.*;
 
-import javax.swing.*;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -66,14 +64,12 @@ public class Simulator {
             for(ParseWave product : parseWave){
                 WaveTask task = new WaveTask(product.getProduct(), warehouse, product.getStartId(), product.getQty());
                 pool.submit(task);
-                System.out.println("submint new task");
                 //add the products name in the right order (how they will show at the end)
                 for (int j = 0; j < product.getQty(); j++) {
                     rightOrderString.add(product.getProduct());
                 }
 
                 task.getResult().whenResolved(() -> {
-                    System.out.println("task resolved");
                     // add the products to the concurrent
                         for (Product product1 : task.getResult().get()) {
                             result.add(product1);
@@ -86,9 +82,7 @@ public class Simulator {
             }
 
             try {
-                System.out.println("down lanch before waiting");
                 downLatch.await();
-                System.out.println("down lanch after waiting");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -97,7 +91,6 @@ public class Simulator {
 
         try {
             pool.shutdown();
-            System.out.println("pool shutdown");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -113,16 +106,6 @@ public class Simulator {
                 }
             }
         }
-
-        //********************************************Just for Testing!! **********************************************
-//
-//        System.out.println("the size of the Queue is "+ finalResult.size());
-//
-//        for (Product p: finalResult
-//             ) {
-//            System.out.println("the product is "+p.getName() + " and id "+p.getFinalId());
-//        }
-        //********************************************Just for Testing!! **********************************************
 
         return finalResult;
     }
@@ -177,46 +160,6 @@ public class Simulator {
                 e.printStackTrace();
             }
 
-            //********************************************Just for Testing!! **********************************************
-            //check that the content of result.ser are accurate
-
-            FileInputStream inputFileStream = null;
-            try {
-                inputFileStream = new FileInputStream("result.ser");
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            ObjectInputStream objectInputStream = null;
-            try {
-                objectInputStream = new ObjectInputStream(inputFileStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            ConcurrentLinkedQueue<Product> verifyResult = null;
-
-            try {
-                verifyResult = (ConcurrentLinkedQueue<Product>) objectInputStream.readObject();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-            try {
-                objectInputStream.close();
-                inputFileStream.close();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            System.out.println("the size of the Queue is " + verifyResult.size());
-
-            for (Product p : verifyResult
-                    ) {
-                System.out.println("the product is " + p.getName() + " and id " + p.getFinalId());
-            }
-
-            //********************************************Just for Testing!! **********************************************
 
             try {
                 Thread.sleep(200);

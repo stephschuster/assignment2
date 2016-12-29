@@ -16,7 +16,6 @@ public class Product implements Serializable {
 	private final long id;
 	private long finalId;
 	private String name;
-	//maybe we dont want a linkedlist here
 	private LinkedList<Product> partsList;
 
     public Product(long startId, String name) {

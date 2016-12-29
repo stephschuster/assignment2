@@ -38,7 +38,6 @@ public class Warehouse {
 	public Deferred<Tool> acquireTool(String type){
         synchronized (toolObject) {
             Deferred<Tool> promise = new Deferred<>();
-			System.out.println("**************** acquire tool size: " + this.tools.get(type).size() );
             if (this.tools.get(type).size() > 0) {
                 Tool tool = this.tools.get(type).poll();
                 promise.resolve(tool);
@@ -59,7 +58,6 @@ public class Warehouse {
 	 */
 	public void releaseTool(Tool tool){
         synchronized (toolObject) {
-			System.out.println("**************** release tool size: " + this.tools.get(tool.getType()).size() );
             ConcurrentLinkedQueue<Deferred<Tool>> list = waitingList.get(tool.getType());
 
             if (list != null && list.size() > 0)
@@ -116,7 +114,6 @@ public class Warehouse {
                     this.tools.put(tool.getType(), temp);
                 }
             }
-			System.out.println("**************** add tool size: " + this.tools.get(tool.getType()).size() );
         }
 	}
 }

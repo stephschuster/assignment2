@@ -7,8 +7,6 @@ import java.math.BigInteger;
 
 public class NextPrimeHammer implements Tool {
     private String toolType = "np-hammer";
-    private long resultOfToolUse;
-
 
     private long findNextPrime(long n) {
         BigInteger b = new BigInteger(String.valueOf(n));

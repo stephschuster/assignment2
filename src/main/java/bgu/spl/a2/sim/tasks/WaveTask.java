@@ -5,7 +5,6 @@ import bgu.spl.a2.sim.Product;
 import bgu.spl.a2.sim.Warehouse;
 
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -43,7 +42,6 @@ public class WaveTask extends Task<CopyOnWriteArrayList<Product>> {
                 result.add(prod);
             }
 
-            System.out.println("$$$$$$$$$$$$$$ wave task finished " + this.product );
             complete(result);
         });
     }

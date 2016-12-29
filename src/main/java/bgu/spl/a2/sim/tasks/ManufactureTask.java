@@ -9,7 +9,6 @@ import bgu.spl.a2.sim.tools.Tool;
 
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -57,17 +56,12 @@ public class ManufactureTask  extends Task<Product> {
                 }
 
                 int toolsAmount = plan.getTools() == null ? 0 : plan.getTools().length;
-                System.out.println("************* toolsAmount " + toolsAmount );
                 CountDownLatch usedTools = new CountDownLatch(toolsAmount);
                 final long[] finalId = {result.getStartId()};
                 // for each tool get a when resolve callback
                 for (String tool : plan.getTools()) {
                     Deferred<Tool> toolDeferred = warehouse.acquireTool(tool);
                     toolDeferred.whenResolved(() -> {
-                        if(toolDeferred.get() == null){
-                            System.out.println("null");
-                        }
-                        System.out.println("************* tool when resolve " + toolDeferred.get().getType() + " on product " + result.getName() );
                         finalId[0] += toolDeferred.get().useOn(result);
                         warehouse.releaseTool(toolDeferred.get());
                         usedTools.countDown();
@@ -76,8 +70,6 @@ public class ManufactureTask  extends Task<Product> {
 
                 try {
                     usedTools.await();
-
-                    System.out.println("************* get all the tools of product " + result.getName() );
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

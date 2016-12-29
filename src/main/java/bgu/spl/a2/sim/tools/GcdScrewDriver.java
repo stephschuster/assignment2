@@ -1,7 +1,6 @@
 package bgu.spl.a2.sim.tools;
 
 import bgu.spl.a2.sim.Product;
-
 import java.math.BigInteger;
 
 
@@ -9,7 +8,6 @@ public class GcdScrewDriver implements Tool {
     //not sure i understood what they wanted the tool type to be
     //in the instructions it says "a string describing the tool type"
     private String toolType = "gs-driver";
-    private long resultOfToolUse;
 
     private long reverse(long n) {
         long reverse=0;
